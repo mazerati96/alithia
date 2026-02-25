@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alithia — The Scrapyard Planet in a Pocket Universe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/worldmap.css" />
+</head>
+<body>
+
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Navigation Overlay -->
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="pages/worldmap.html">WORLD MAP</a></li>
+            <li><a href="pages/lore.html">LORE CODEX</a></li>
+            <li><a href="pages/factions.html">FACTIONS</a></li>
+            <li><a href="pages/characters.html">CHARACTERS</a></li>
+            <li><a href="pages/updates.html">UPDATES</a></li>
+            <li><a href="pages/login.html">COLLABORATOR LOGIN</a></li>
+        </ul>
+    </div>
+
+    <!-- Page Transition -->
+    <div class="page-transition"></div>
+
+    <!-- Explore hint -->
+    <div class="map-explore-hint">Click & drag to explore Alithia</div>
+
+    <!-- World Map Container -->
+    <div class="worldmap-container">
+
+        <div class="map-title-block">
+            <div class="map-title-eyebrow">— The Scrapyard Planet in a Pocket Universe —</div>
+            <h1 class="map-title">ALITHIA</h1>
+        </div>
+
+        <!-- Map Background with regions inside -->
+        <div class="worldmap-background">
+            <img src="assets/images/Alithia.copy.jpg" alt="The World of Alithia" />
+
+            <!-- Interactive Regions — adjust top/left % to match your map image -->
+            <div class="regions">
+
+                <!-- ⚠️  PLACEHOLDER REGIONS — reposition top/left to match Alithia.jpg -->
+                <div class="region" data-region="region1" style="top: 20%; left: 25%;">
+                    <div class="region-hotspot"></div>
+                    <div class="region-label">Region Name</div>
+                </div>
+
+                <div class="region" data-region="region2" style="top: 35%; left: 55%;">
+                    <div class="region-hotspot"></div>
+                    <div class="region-label">Region Name</div>
+                </div>
+
+                <div class="region" data-region="region3" style="top: 60%; left: 40%;">
+                    <div class="region-hotspot"></div>
+                    <div class="region-label">Region Name</div>
+                </div>
+
+                <div class="region" data-region="region4" style="top: 70%; left: 70%;">
+                    <div class="region-hotspot"></div>
+                    <div class="region-label">Region Name</div>
+                </div>
+
+                <div class="region" data-region="region5" style="top: 45%; left: 15%;">
+                    <div class="region-hotspot"></div>
+                    <div class="region-label">Region Name</div>
+                </div>
+
+                <div class="region" data-region="region6" style="top: 15%; left: 70%;">
+                    <div class="region-hotspot"></div>
+                    <div class="region-label">Region Name</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="js/worldmap.js"></script>
+</body>
+</html>
