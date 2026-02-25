@@ -1,0 +1,411 @@
+/* ============================================================
+   CHANGELOG — ALITHIA
+   ============================================================ */
+
+:root {
+    --green: #3dff8f;
+    --green-dim: #1a7a45;
+    --green-border: rgba(61, 255, 143, 0.2);
+    --black: #050a07;
+    --surface: rgba(8, 18, 11, 0.8);
+    --font-display: 'Cinzel Decorative', serif;
+    --font-body: 'Cormorant Garamond', serif;
+    --topbar-h: 56px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    min-height: 100%;
+    background: var(--black);
+    color: var(--green);
+    font-family: var(--font-body);
+}
+
+#bg-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 0%, transparent 30%, rgba(5,10,7,0.55) 70%, rgba(5,10,7,0.92) 100%);
+}
+
+.auth-guard {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s;
+}
+
+    .auth-guard.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.auth-guard-inner {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.guard-rune {
+    font-size: 3rem;
+    color: var(--green-dim);
+    animation: guardSpin 3s linear infinite;
+}
+
+@keyframes guardSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.auth-guard-inner p {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--green-dim);
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.changelog-wrap {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Topbar */
+.cl-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-h);
+    z-index: 80;
+    background: rgba(5,10,7,0.92);
+    border-bottom: 1px solid var(--green-border);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+}
+
+.cl-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.topbar-home {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-decoration: none;
+    text-shadow: 0 0 12px rgba(61,255,143,0.4);
+}
+
+.topbar-glyph {
+    margin-right: 0.3rem;
+}
+
+.topbar-divider {
+    color: var(--green-border);
+}
+
+.topbar-label {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--green-dim);
+    letter-spacing: 0.1em;
+}
+
+.cl-topbar-right {
+    margin-right: 3.5rem;
+}
+
+.back-link {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--green-dim);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+    .back-link:hover {
+        color: var(--green);
+    }
+
+/* Body */
+.cl-body {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: calc(var(--topbar-h) + 3rem) 1.5rem 4rem;
+}
+
+.cl-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.cl-eyebrow {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
+    color: var(--green-dim);
+    margin-bottom: 0.5rem;
+}
+
+.cl-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-shadow: 0 0 20px rgba(61,255,143,0.4), 0 0 60px rgba(61,255,143,0.15);
+}
+
+.cl-divider {
+    margin: 0.75rem auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 200px;
+}
+
+    .cl-divider::before, .cl-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, transparent, var(--green-dim));
+    }
+
+    .cl-divider::after {
+        background: linear-gradient(to left, transparent, var(--green-dim));
+    }
+
+    .cl-divider span {
+        color: var(--green);
+        font-size: 0.7rem;
+    }
+
+.cl-subtitle {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: rgba(61,255,143,0.45);
+    letter-spacing: 0.06em;
+}
+
+/* List */
+.cl-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.cl-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3rem;
+    color: var(--green-dim);
+    font-family: var(--font-body);
+    font-style: italic;
+}
+
+.loading-rune {
+    font-size: 1.2rem;
+    animation: runeFlicker 1.5s ease-in-out infinite;
+}
+
+@keyframes runeFlicker {
+    0%,100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 10px var(--green);
+    }
+}
+
+.cl-empty {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    color: rgba(61,255,143,0.3);
+    padding: 3rem;
+    border: 1px dashed var(--green-border);
+}
+
+/* Entry */
+.cl-entry {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--green-border);
+    animation: entryIn 0.4s ease forwards;
+}
+
+@keyframes entryIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.cl-entry-time {
+    padding: 1.1rem 1rem 1.1rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+    border-right: 1px solid var(--green-border);
+}
+
+.cl-time-main {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: var(--green-dim);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.cl-time-sub {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.68rem;
+    color: rgba(61,255,143,0.3);
+}
+
+.cl-entry-dot {
+    position: relative;
+}
+
+    .cl-entry-dot::before {
+        content: '';
+        position: absolute;
+        right: -5px;
+        top: 1.35rem;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green-dim);
+        box-shadow: 0 0 6px var(--green-dim);
+    }
+
+.cl-entry-content {
+    padding: 1rem 0 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.cl-entry-type {
+    font-family: var(--font-display);
+    font-size: 0.52rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+}
+
+.cl-entry-summary {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--green);
+    letter-spacing: 0.03em;
+}
+
+.cl-entry-preview {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.85rem;
+    color: rgba(61,255,143,0.5);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Type color accents */
+.cl-entry[data-type="announcement"] .cl-entry-dot::before {
+    background: #ffb84d;
+    box-shadow: 0 0 6px #ffb84d;
+}
+
+.cl-entry[data-type="announcement"] .cl-entry-type {
+    color: #ffb84d;
+}
+
+.cl-entry[data-type="claim"] .cl-entry-dot::before {
+    background: rgba(61,255,143,0.5);
+}
+
+@media (max-width: 560px) {
+    .cl-body {
+        padding: calc(var(--topbar-h) + 2rem) 1rem 3rem;
+    }
+
+    .cl-entry {
+        grid-template-columns: 60px 1fr;
+    }
+
+    .cl-entry-time {
+        padding: 0.9rem 0.6rem 0.9rem 0;
+    }
+
+    .cl-time-main {
+        font-size: 0.65rem;
+    }
+}

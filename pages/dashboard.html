@@ -15,12 +15,10 @@
     <canvas id="bg-canvas"></canvas>
     <div class="vignette"></div>
 
-    <!-- Hamburger -->
     <div class="hamburger-menu" id="hamburger">
         <span></span><span></span><span></span>
     </div>
 
-    <!-- Nav Overlay -->
     <div class="nav-overlay" id="navOverlay">
         <ul class="nav-menu">
             <li><a href="worldmap.html">WORLD MAP</a></li>
@@ -34,7 +32,6 @@
 
     <div class="page-transition"></div>
 
-    <!-- Auth guard overlay — shown while checking auth, hidden once confirmed -->
     <div class="auth-guard" id="authGuard">
         <div class="auth-guard-inner">
             <div class="guard-rune">ᚱ</div>
@@ -42,28 +39,25 @@
         </div>
     </div>
 
-    <!-- Dashboard (hidden until auth confirmed) -->
     <div class="dashboard-wrap hidden" id="dashboardWrap">
 
-        <!-- Top bar -->
         <header class="dash-topbar">
             <div class="dash-topbar-left">
-                <a href="worldmap.html" class="topbar-home">
-                    <span class="topbar-glyph">✦</span> Alithia
-                </a>
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
                 <span class="topbar-divider">|</span>
                 <span class="topbar-label">Collaborator Dashboard</span>
             </div>
             <div class="dash-topbar-right">
+                <button class="topbar-icon-btn" id="searchBtn" title="Search the chronicle">⌕</button>
                 <span class="topbar-username" id="topbarUsername">—</span>
+                <span class="notif-dot hidden" id="notifDot" title="New updates since your last visit"></span>
                 <button class="signout-btn" id="signOutBtn">Sign Out</button>
             </div>
         </header>
 
-        <!-- Main layout: feed left, sidebar right -->
         <div class="dash-body">
 
-            <!-- ── LEFT: Update Feed ── -->
+            <!-- LEFT: Feed -->
             <section class="dash-feed">
 
                 <div class="feed-header">
@@ -71,29 +65,64 @@
                     <div class="feed-subtitle">What's happening in Alithia</div>
                 </div>
 
-                <!-- Filter bar -->
+                <!-- Author chips -->
                 <div class="filter-bar" id="filterBar">
                     <button class="filter-chip active" data-uid="all">All Updates</button>
                 </div>
 
-                <!-- Post composer -->
+                <!-- Category chips -->
+                <div class="filter-bar category-bar" id="categoryBar">
+                    <span class="filter-label">Category:</span>
+                    <button class="filter-chip cat-chip active" data-cat="all">All</button>
+                    <button class="filter-chip cat-chip" data-cat="lore">📜 Lore</button>
+                    <button class="filter-chip cat-chip" data-cat="character">👤 Character</button>
+                    <button class="filter-chip cat-chip" data-cat="map">🗺 Map</button>
+                    <button class="filter-chip cat-chip" data-cat="mechanics">⚙ Mechanics</button>
+                    <button class="filter-chip cat-chip" data-cat="misc">✦ Misc</button>
+                </div>
+
+                <!-- Keeper announcements -->
+                <div class="announcements-section" id="announcementsSection">
+                    <div class="announcements-header">
+                        <span class="announce-icon">📌</span>
+                        <span class="announce-title">Keeper's Announcements</span>
+                        <button class="announce-add-btn hidden" id="announceAddBtn">+ Pin</button>
+                    </div>
+                    <div class="announce-composer hidden" id="announceComposer">
+                        <textarea id="announceContent" class="composer-textarea"
+                                  placeholder="Pin an announcement for all collaborators…"
+                                  maxlength="600" rows="2"></textarea>
+                        <div class="composer-footer">
+                            <button class="post-btn" id="announcePostBtn">Pin It</button>
+                            <button class="card-action-btn cancel-btn" id="announceCancelBtn">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="announceList"></div>
+                </div>
+
+                <!-- Composer -->
                 <div class="composer" id="composer">
                     <div class="composer-header">
                         <span class="composer-avatar" id="composerAvatar">?</span>
                         <span class="composer-name" id="composerName">—</span>
+                        <select class="category-select" id="postCategory">
+                            <option value="misc">✦ Misc</option>
+                            <option value="lore">📜 Lore</option>
+                            <option value="character">👤 Character</option>
+                            <option value="map">🗺 Map</option>
+                            <option value="mechanics">⚙ Mechanics</option>
+                        </select>
                     </div>
-                    <textarea id="postContent"
-                              class="composer-textarea"
+                    <textarea id="postContent" class="composer-textarea"
                               placeholder="Share a progress update, lore note, or world-building thought…"
-                              maxlength="1000"
-                              rows="3"></textarea>
+                              maxlength="1000" rows="3"></textarea>
                     <div class="composer-footer">
                         <span class="char-count" id="charCount">0 / 1000</span>
                         <button class="post-btn" id="postBtn">Post Update</button>
                     </div>
                 </div>
 
-                <!-- Feed list -->
+                <!-- Feed -->
                 <div class="feed-list" id="feedList">
                     <div class="feed-loading" id="feedLoading">
                         <span class="loading-rune">ᚠ</span>
@@ -103,18 +132,19 @@
 
             </section>
 
-            <!-- ── RIGHT: Sidebar ── -->
+            <!-- RIGHT: Sidebar -->
             <aside class="dash-sidebar">
 
-                <!-- Collaborator profile card -->
+                <!-- Profile -->
                 <div class="sidebar-card profile-card">
                     <div class="profile-avatar" id="profileAvatar">?</div>
                     <div class="profile-name" id="profileName">—</div>
-                    <div class="profile-role">Collaborator</div>
+                    <div class="profile-role" id="profileRole">Collaborator</div>
                     <div class="profile-since" id="profileSince">—</div>
+                    <button class="edit-profile-btn" id="editProfileBtn">✎ Edit Profile</button>
                 </div>
 
-                <!-- Stats card -->
+                <!-- Stats -->
                 <div class="sidebar-card stats-card">
                     <div class="card-label">Your Contributions</div>
                     <div class="stats-row">
@@ -130,34 +160,38 @@
                     </div>
                 </div>
 
-                <!-- Quick links card -->
+                <!-- Lore Claims -->
+                <div class="sidebar-card claims-card">
+                    <div class="card-label">Lore Claims</div>
+                    <div class="claims-list" id="claimsList">
+                        <div class="collab-loading">Loading claims…</div>
+                    </div>
+                    <button class="post-btn claims-add-btn" id="claimsAddBtn">+ Claim a Topic</button>
+                </div>
+
+                <!-- Quick links -->
                 <div class="sidebar-card links-card">
                     <div class="card-label">Quick Navigation</div>
                     <nav class="quick-links">
                         <a href="worldmap.html" class="quick-link">
-                            <span class="ql-icon">🗺</span>
-                            <span>World Map</span>
-                            <span class="ql-arrow">→</span>
+                            <span class="ql-icon">🗺</span><span>World Map</span><span class="ql-arrow">→</span>
                         </a>
                         <a href="lore.html" class="quick-link">
-                            <span class="ql-icon">📜</span>
-                            <span>Lore Codex</span>
-                            <span class="ql-arrow">→</span>
+                            <span class="ql-icon">📜</span><span>Lore Codex</span><span class="ql-arrow">→</span>
                         </a>
                         <a href="factions.html" class="quick-link">
-                            <span class="ql-icon">⚔</span>
-                            <span>Factions</span>
-                            <span class="ql-arrow">→</span>
+                            <span class="ql-icon">⚔</span><span>Factions</span><span class="ql-arrow">→</span>
                         </a>
                         <a href="characters.html" class="quick-link">
-                            <span class="ql-icon">👤</span>
-                            <span>Characters</span>
-                            <span class="ql-arrow">→</span>
+                            <span class="ql-icon">👤</span><span>Characters</span><span class="ql-arrow">→</span>
+                        </a>
+                        <a href="changelog.html" class="quick-link">
+                            <span class="ql-icon">📋</span><span>Changelog</span><span class="ql-arrow">→</span>
                         </a>
                     </nav>
                 </div>
 
-                <!-- Collaborators card -->
+                <!-- Collaborators -->
                 <div class="sidebar-card collab-card">
                     <div class="card-label">The Collaboration — <span id="collabCount">0</span> members</div>
                     <div class="collab-list" id="collabList">
@@ -169,26 +203,77 @@
         </div>
     </div>
 
-    <!-- Profile modal -->
-    <div class="profile-modal-backdrop hidden" id="profileModalBackdrop">
-        <div class="profile-modal" id="profileModal">
+    <!-- Collaborator profile modal -->
+    <div class="modal-backdrop hidden" id="profileModalBackdrop">
+        <div class="modal-box" id="profileModal">
             <button class="modal-close" id="modalClose">✕</button>
             <div class="modal-avatar" id="modalAvatar">?</div>
             <div class="modal-name" id="modalName">—</div>
-            <div class="modal-role">Collaborator</div>
+            <div class="modal-role" id="modalRoleDisplay">Collaborator</div>
             <div class="modal-meta">
-                <span id="modalPosts">— posts</span>
+                <span id="modalPosts">—</span>
                 <span class="modal-meta-dot">·</span>
                 <span id="modalJoined">—</span>
             </div>
             <div class="modal-divider"></div>
-            <div class="modal-recent-label">Recent Updates</div>
-            <div class="modal-recent-list" id="modalRecentList">
-                <div class="modal-loading">Loading…</div>
+            <div class="modal-section-label">Recent Updates</div>
+            <div class="modal-list" id="modalRecentList"></div>
+            <button class="modal-filter-btn" id="modalFilterBtn">View All Their Updates →</button>
+        </div>
+    </div>
+
+    <!-- Edit profile modal -->
+    <div class="modal-backdrop hidden" id="editProfileBackdrop">
+        <div class="modal-box">
+            <button class="modal-close" id="editProfileClose">✕</button>
+            <div class="modal-avatar" id="editProfileAvatar">?</div>
+            <div class="modal-section-label" style="align-self:flex-start">Edit Your Profile</div>
+            <div class="modal-form">
+                <label class="modal-label">Display Name</label>
+                <input type="text" class="modal-input" id="editNameInput"
+                       placeholder="Your collaborator name" maxlength="40" />
+                <div class="form-message" id="editProfileMsg"></div>
+                <button class="post-btn" id="editProfileSave" style="width:100%;margin-top:0.5rem">Save Changes</button>
             </div>
-            <button class="modal-filter-btn" id="modalFilterBtn">
-                View All Their Updates →
-            </button>
+        </div>
+    </div>
+
+    <!-- Claim topic modal -->
+    <div class="modal-backdrop hidden" id="claimModalBackdrop">
+        <div class="modal-box">
+            <button class="modal-close" id="claimModalClose">✕</button>
+            <div class="modal-section-label" style="align-self:flex-start">Claim a Lore Topic</div>
+            <p class="modal-hint">Signal to the team that you're actively writing this. Be specific — "Narithrem history", "Iron Compact faction", "Seraph character arc".</p>
+            <div class="modal-form">
+                <label class="modal-label">Topic Name</label>
+                <input type="text" class="modal-input" id="claimTopicInput"
+                       placeholder="e.g. Narithrem history" maxlength="60" />
+                <label class="modal-label" style="margin-top:0.75rem">Category</label>
+                <select class="modal-input category-select" id="claimCategorySelect">
+                    <option value="region">Region</option>
+                    <option value="faction">Faction</option>
+                    <option value="character">Character</option>
+                    <option value="lore">General Lore</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="form-message" id="claimMsg"></div>
+                <button class="post-btn" id="claimSubmitBtn" style="width:100%;margin-top:0.75rem">Claim Topic</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search overlay -->
+    <div class="search-overlay hidden" id="searchOverlay">
+        <div class="search-inner">
+            <div class="search-bar-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" class="search-input" id="searchInput"
+                       placeholder="Search updates, announcements, claims…" autocomplete="off" />
+                <button class="modal-close search-close" id="searchClose">✕</button>
+            </div>
+            <div class="search-results" id="searchResults">
+                <div class="search-hint">Start typing to search the chronicle…</div>
+            </div>
         </div>
     </div>
 
