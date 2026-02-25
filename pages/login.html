@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collaborator Login — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/login.css" />
+</head>
+<body>
+
+    <!-- Ambient background particles -->
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <!-- Back to map -->
+    <a class="back-link" href="worldmap.html">← Return to Alithia</a>
+
+    <main class="login-page">
+
+        <!-- Header -->
+        <div class="login-header">
+            <div class="header-eyebrow">— Collaborator Portal —</div>
+            <h1 class="header-title">ALITHIA</h1>
+            <div class="header-divider">
+                <span class="divider-gem">✦</span>
+            </div>
+        </div>
+
+        <!-- Card -->
+        <div class="login-card" id="loginCard">
+
+            <!-- Tab switcher -->
+            <div class="tab-switcher">
+                <button class="tab-btn active" id="tabLogin" data-tab="login">Sign In</button>
+                <button class="tab-btn" id="tabRegister" data-tab="register">Register</button>
+            </div>
+
+            <!-- ── LOGIN FORM ── -->
+            <form class="auth-form" id="loginForm" novalidate>
+
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-eye-wrap">
+                        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+                        <button type="button" class="eye-btn" data-target="loginPassword" aria-label="Toggle password visibility">
+                            <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                                <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-message" id="loginMessage"></div>
+
+                <button type="submit" class="submit-btn" id="loginSubmit">
+                    <span class="btn-text">Enter the World</span>
+                    <span class="btn-spinner" style="display:none">◌</span>
+                </button>
+
+            </form>
+
+            <!-- ── REGISTER FORM ── -->
+            <form class="auth-form hidden" id="registerForm" novalidate>
+
+                <div class="form-group">
+                    <label for="regUsername">Display Name</label>
+                    <input type="text" id="regUsername" placeholder="Your collaborator name" autocomplete="username" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <div class="input-eye-wrap">
+                        <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password" required />
+                        <button type="button" class="eye-btn" data-target="regPassword" aria-label="Toggle password visibility">
+                            <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                                <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regConfirm">Confirm Password</label>
+                    <div class="input-eye-wrap">
+                        <input type="password" id="regConfirm" placeholder="••••••••" autocomplete="new-password" required />
+                        <button type="button" class="eye-btn" data-target="regConfirm" aria-label="Toggle password visibility">
+                            <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                                <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Magic Key field -->
+                <div class="form-group magic-key-group">
+                    <label for="regMagicKey">
+                        <span class="key-icon">🗝</span> Magic Key
+                    </label>
+                    <div class="input-eye-wrap">
+                        <input type="password" id="regMagicKey" placeholder="Ask the keeper of Alithia" required />
+                        <button type="button" class="eye-btn" data-target="regMagicKey" aria-label="Toggle key visibility">
+                            <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                                <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="field-hint">A secret phrase shared by the world's keeper</div>
+                </div>
+
+                <div class="form-message" id="registerMessage"></div>
+
+                <button type="submit" class="submit-btn" id="registerSubmit">
+                    <span class="btn-text">Join the Collaboration</span>
+                    <span class="btn-spinner" style="display:none">◌</span>
+                </button>
+
+            </form>
+
+        </div>
+        <!-- /login-card -->
+
+    </main>
+
+    <!-- Firebase SDKs (modular v10) -->
+    <script type="module" src="../auth/firebase-config.js"></script>
+    <script type="module" src="../js/login.js"></script>
+</body>
+</html>
