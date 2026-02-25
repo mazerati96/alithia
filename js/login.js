@@ -156,9 +156,23 @@ loginForm.addEventListener("submit", async (e) => {
     setLoading("loginSubmit", "loginSpinner", true);
 
     try {
-        await signInWithEmailAndPassword(auth, email, password);
-        if (isKeeper = true) { setMessage("loginMessage", "Welcome back, Keeper. Entering Alithia…", "success"); }  
-        setMessage("loginMessage", "Welcome back, collaborator. Entering Alithia…", "success");
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Check keeper role from Firestore
+        let isKeeper = false;
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                isKeeper = userDoc.data().role === "keeper";
+            }
+        } catch (e) { /* silent — role check is non-critical */ }
+
+        const welcomeMsg = isKeeper
+            ? "Welcome back, Keeper. Alithia awaits your guidance…"
+            : "Welcome back, collaborator. Entering Alithia…";
+
+        setMessage("loginMessage", welcomeMsg, "success");
         setTimeout(() => {
             window.location.href = "dashboard.html";
         }, 1200);
