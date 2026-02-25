@@ -6,11 +6,11 @@ let charIndex = 0;
 function typeTagline() {
     if (charIndex < tagline.length) {
         taglineEl.textContent += tagline[charIndex++];
-        setTimeout(typeTagline, 48);
+        setTimeout(typeTagline, 30); //adjusted from 48 for a slightly faster typing effect
     }
 }
 // Start after the CSS fade-in animation reveals the tagline element
-setTimeout(typeTagline, 800);
+setTimeout(typeTagline, 500); //adjusted from 1000 to start typing sooner, syncing better with the fade-in
 
 /* ─── Rune ring visibility ─────────────────────────────────── */
 const runeRing = document.getElementById("runeRing");
