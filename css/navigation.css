@@ -106,7 +106,42 @@
         pointer-events: all;
     }
 
-/* ── Responsive ────────────────────────────────────────────── */
+/* ── Auth indicator (optional, add id="authIndicator" to any topbar) ── */
+#authIndicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body, 'Cormorant Garamond', serif);
+    font-size: 0.82rem;
+}
+
+.auth-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+    .auth-dot.logged-in {
+        background: var(--green, #3dff8f);
+        box-shadow: 0 0 6px var(--green, #3dff8f);
+    }
+
+    .auth-dot.logged-out {
+        background: rgba(61, 255, 143, 0.25);
+    }
+
+.auth-name {
+    color: var(--green-dim, #1a7a45);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: color 0.3s;
+}
+
+    .auth-name:hover {
+        color: var(--green, #3dff8f);
+    }
+
 @media (max-width: 480px) {
     .hamburger-menu {
         top: 16px;
