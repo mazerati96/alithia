@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collaborator Dashboard — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <!-- Hamburger -->
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+
+    <!-- Nav Overlay -->
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="lore.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="updates.html">UPDATES</a></li>
+            <li><a href="dashboard.html" class="active">DASHBOARD</a></li>
+        </ul>
+    </div>
+
+    <div class="page-transition"></div>
+
+    <!-- Auth guard overlay — shown while checking auth, hidden once confirmed -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <!-- Dashboard (hidden until auth confirmed) -->
+    <div class="dashboard-wrap hidden" id="dashboardWrap">
+
+        <!-- Top bar -->
+        <header class="dash-topbar">
+            <div class="dash-topbar-left">
+                <a href="worldmap.html" class="topbar-home">
+                    <span class="topbar-glyph">✦</span> Alithia
+                </a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Collaborator Dashboard</span>
+            </div>
+            <div class="dash-topbar-right">
+                <span class="topbar-username" id="topbarUsername">—</span>
+                <button class="signout-btn" id="signOutBtn">Sign Out</button>
+            </div>
+        </header>
+
+        <!-- Main layout: feed left, sidebar right -->
+        <div class="dash-body">
+
+            <!-- ── LEFT: Update Feed ── -->
+            <section class="dash-feed">
+
+                <div class="feed-header">
+                    <h2 class="feed-title">Collaborator Updates</h2>
+                    <div class="feed-subtitle">What's happening in Alithia</div>
+                </div>
+
+                <!-- Post composer -->
+                <div class="composer" id="composer">
+                    <div class="composer-header">
+                        <span class="composer-avatar" id="composerAvatar">?</span>
+                        <span class="composer-name" id="composerName">—</span>
+                    </div>
+                    <textarea id="postContent"
+                              class="composer-textarea"
+                              placeholder="Share a progress update, lore note, or world-building thought…"
+                              maxlength="1000"
+                              rows="3"></textarea>
+                    <div class="composer-footer">
+                        <span class="char-count" id="charCount">0 / 1000</span>
+                        <button class="post-btn" id="postBtn">Post Update</button>
+                    </div>
+                </div>
+
+                <!-- Feed list -->
+                <div class="feed-list" id="feedList">
+                    <div class="feed-loading" id="feedLoading">
+                        <span class="loading-rune">ᚠ</span>
+                        <span>Loading the chronicle…</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ── RIGHT: Sidebar ── -->
+            <aside class="dash-sidebar">
+
+                <!-- Collaborator profile card -->
+                <div class="sidebar-card profile-card">
+                    <div class="profile-avatar" id="profileAvatar">?</div>
+                    <div class="profile-name" id="profileName">—</div>
+                    <div class="profile-role">Collaborator</div>
+                    <div class="profile-since" id="profileSince">—</div>
+                </div>
+
+                <!-- Stats card -->
+                <div class="sidebar-card stats-card">
+                    <div class="card-label">Your Contributions</div>
+                    <div class="stats-row">
+                        <div class="stat">
+                            <div class="stat-value" id="statPosts">—</div>
+                            <div class="stat-label">Updates Posted</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat">
+                            <div class="stat-value" id="statDays">—</div>
+                            <div class="stat-label">Days Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick links card -->
+                <div class="sidebar-card links-card">
+                    <div class="card-label">Quick Navigation</div>
+                    <nav class="quick-links">
+                        <a href="worldmap.html" class="quick-link">
+                            <span class="ql-icon">🗺</span>
+                            <span>World Map</span>
+                            <span class="ql-arrow">→</span>
+                        </a>
+                        <a href="lore.html" class="quick-link">
+                            <span class="ql-icon">📜</span>
+                            <span>Lore Codex</span>
+                            <span class="ql-arrow">→</span>
+                        </a>
+                        <a href="factions.html" class="quick-link">
+                            <span class="ql-icon">⚔</span>
+                            <span>Factions</span>
+                            <span class="ql-arrow">→</span>
+                        </a>
+                        <a href="characters.html" class="quick-link">
+                            <span class="ql-icon">👤</span>
+                            <span>Characters</span>
+                            <span class="ql-arrow">→</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Collaborators online card (static for now) -->
+                <div class="sidebar-card team-card">
+                    <div class="card-label">The Keeper's Note</div>
+                    <p class="keeper-note" id="keeperNote">
+                        Welcome to the Alithia collaboration hub. Post your updates,
+                        track progress, and keep the world alive.
+                    </p>
+                </div>
+
+            </aside>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/dashboard.js"></script>
+</body>
+</html>

@@ -7,25 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const worldmapBackground = document.querySelector('.worldmap-background');
     const mapImage = worldmapBackground.querySelector('img');
     const container = document.querySelector('.worldmap-container');
-    const hamburger = document.getElementById('hamburger');
-    const navOverlay = document.getElementById('navOverlay');
-
-    // ============================================
-    // HAMBURGER NAV TOGGLE
-    // ============================================
-
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('open');
-        navOverlay.classList.toggle('open');
-    });
-
-    // Close nav when a link is clicked
-    navOverlay.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            hamburger.classList.remove('open');
-            navOverlay.classList.remove('open');
-        });
-    });
 
     // ============================================
     // SMOOTH FADE-IN AFTER IMAGE LOADS
@@ -64,13 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function navigateToRegion(regionKey) {
         const data = regionData[regionKey];
-        if (data) {
-            const transition = document.querySelector('.page-transition');
-            transition.classList.add('active');
-            setTimeout(() => {
-                window.location.href = data.link;
-            }, 600);
-        }
+        if (data) window.navigateTo(data.link);
     }
 
     // ============================================

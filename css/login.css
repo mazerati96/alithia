@@ -47,7 +47,7 @@ html, body {
     pointer-events: none;
 }
 
-/* ── Back link ── */
+/* ── Back link (login-specific) ── */
 .back-link {
     position: fixed;
     top: 24px;
