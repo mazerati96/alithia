@@ -7,9 +7,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
     <link rel="stylesheet" href="../css/login.css" />
 </head>
 <body>
+
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Navigation Overlay -->
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html" class="active">WORLD MAP</a></li>
+            <li><a href="lore.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="updates.html">UPDATES</a></li>
+            <li><a href="login.html">COLLABORATOR LOGIN</a></li>
+        </ul>
+    </div>
 
     <!-- Ambient background particles -->
     <canvas id="bg-canvas"></canvas>
@@ -19,6 +39,9 @@
     <a class="back-link" href="worldmap.html">← Return to Alithia</a>
 
     <main class="login-page">
+
+
+
 
         <!-- Header -->
         <div class="login-header">
@@ -159,7 +182,10 @@
     </main>
 
     <!-- Firebase SDKs (modular v10) -->
+    <script src="../js/navigation.js"></script>
     <script type="module" src="../auth/firebase-config.js"></script>
+
     <script type="module" src="../js/login.js"></script>
+
 </body>
 </html>
