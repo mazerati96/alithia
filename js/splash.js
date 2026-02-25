@@ -10,7 +10,7 @@ function typeTagline() {
     }
 }
 // Start after the CSS fade-in animation reveals the tagline element
-setTimeout(typeTagline, 1400);
+setTimeout(typeTagline, 8000);
 
 /* ─── Rune ring visibility ─────────────────────────────────── */
 const runeRing = document.getElementById("runeRing");
