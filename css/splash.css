@@ -131,7 +131,7 @@ html, body {
 /* ─── Title ─────────────────────────────────────────────────── */
 .title {
     font-family: var(--font-display);
-    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-size: clamp(1.8rem, 10vw, 7rem);
     font-weight: 700;
     letter-spacing: 0.12em;
     color: var(--green);
