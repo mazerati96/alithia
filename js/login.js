@@ -157,6 +157,7 @@ loginForm.addEventListener("submit", async (e) => {
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
+        if (isKeeper = true) { setMessage("loginMessage", "Welcome back, Keeper. Entering Alithia…", "success"); }  
         setMessage("loginMessage", "Welcome back, collaborator. Entering Alithia…", "success");
         setTimeout(() => {
             window.location.href = "dashboard.html";
