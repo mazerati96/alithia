@@ -754,6 +754,338 @@ html, body {
     letter-spacing: 0.03em;
 }
 
+/* ── Filter bar ────────────────────────────────────────────── */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+}
+
+.filter-chip {
+    background: none;
+    border: 1px solid var(--green-border);
+    color: var(--green-dim);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+}
+
+    .filter-chip:hover {
+        border-color: var(--green-dim);
+        color: var(--green);
+    }
+
+    .filter-chip.active {
+        border-color: var(--green);
+        color: var(--green);
+        background: rgba(61,255,143,0.07);
+        box-shadow: 0 0 10px rgba(61,255,143,0.1);
+    }
+
+/* ── Collaborator list (sidebar) ───────────────────────────── */
+.collab-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.collab-loading {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: rgba(61,255,143,0.3);
+    padding: 0.5rem 0;
+}
+
+.collab-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 0.4rem;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: all 0.25s;
+    border-radius: 2px;
+}
+
+    .collab-item:last-child {
+        border-bottom: none;
+    }
+
+    .collab-item:hover {
+        background: rgba(61,255,143,0.04);
+        border-bottom-color: var(--green-border);
+        padding-left: 0.7rem;
+    }
+
+    .collab-item.is-you .collab-item-name::after {
+        content: ' (you)';
+        font-style: italic;
+        color: rgba(61,255,143,0.35);
+        font-size: 0.7rem;
+    }
+
+.collab-item-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--green-dim);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    color: var(--green);
+    flex-shrink: 0;
+    transition: box-shadow 0.25s;
+}
+
+.collab-item:hover .collab-item-avatar {
+    box-shadow: 0 0 12px rgba(61,255,143,0.25);
+}
+
+.collab-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.collab-item-name {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    color: var(--green-dim);
+    transition: color 0.25s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.collab-item:hover .collab-item-name {
+    color: var(--green);
+}
+
+.collab-item-count {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.7rem;
+    color: rgba(61,255,143,0.3);
+}
+
+.collab-item-arrow {
+    font-size: 0.75rem;
+    color: rgba(61,255,143,0.2);
+    transition: color 0.25s, transform 0.25s;
+}
+
+.collab-item:hover .collab-item-arrow {
+    color: var(--green-dim);
+    transform: translateX(3px);
+}
+
+/* ── Profile modal ─────────────────────────────────────────── */
+.profile-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 250;
+    background: rgba(5,10,7,0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: backdropIn 0.25s ease forwards;
+}
+
+    .profile-modal-backdrop.hidden {
+        display: none !important;
+    }
+
+@keyframes backdropIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.profile-modal {
+    background: var(--surface-2);
+    border: 1px solid rgba(61,255,143,0.3);
+    box-shadow: 0 0 60px rgba(61,255,143,0.1);
+    padding: 2rem 1.75rem;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    position: relative;
+    animation: modalIn 0.3s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.9rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--green-dim);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+    padding: 0.25rem;
+}
+
+    .modal-close:hover {
+        color: var(--green);
+    }
+
+.modal-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 1px solid var(--green-dim);
+    background: rgba(8,18,11,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--green);
+    text-shadow: 0 0 14px rgba(61,255,143,0.5);
+    box-shadow: 0 0 24px rgba(61,255,143,0.1);
+    margin-bottom: 0.2rem;
+}
+
+.modal-name {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-align: center;
+}
+
+.modal-role {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.78rem;
+    color: var(--green-dim);
+}
+
+.modal-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    color: rgba(61,255,143,0.4);
+}
+
+.modal-meta-dot {
+    color: var(--green-border);
+}
+
+.modal-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--green-border);
+    margin: 0.4rem 0;
+}
+
+.modal-recent-label {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+    align-self: flex-start;
+}
+
+.modal-recent-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.modal-loading {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: rgba(61,255,143,0.3);
+    text-align: center;
+    padding: 0.75rem 0;
+}
+
+.modal-post-snippet {
+    background: rgba(61,255,143,0.03);
+    border: 1px solid var(--green-border);
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.modal-post-text {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: rgba(61,255,143,0.75);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.modal-post-time {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(61,255,143,0.3);
+}
+
+.modal-filter-btn {
+    margin-top: 0.5rem;
+    background: none;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: 100%;
+}
+
+    .modal-filter-btn:hover {
+        border-color: var(--green);
+        box-shadow: 0 0 14px rgba(61,255,143,0.15);
+    }
+
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
     .dash-body {

@@ -79,18 +79,19 @@ const feedLoading = document.getElementById("feedLoading");
 
 // ── Current user state ───────────────────────────────────────
 let currentUser = null;
+let allUpdates = [];   // full cache — only fetched once per load
+let activeFilter = "all"; // uid or "all"
 
 // ── Auth guard ───────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // Not logged in — hard redirect
         window.location.href = "login.html";
         return;
     }
 
     currentUser = user;
     revealDashboard(user);
-    await loadFeed();
+    await loadAllUpdates();
     await loadStats(user.uid);
 });
 
@@ -154,7 +155,7 @@ postBtn.addEventListener("click", async () => {
         charCount.textContent = "0 / 1000";
         charCount.className = "char-count";
 
-        await loadFeed();
+        await loadAllUpdates();
         await loadStats(currentUser.uid);
 
     } catch (err) {
@@ -165,35 +166,20 @@ postBtn.addEventListener("click", async () => {
     postBtn.textContent = "Post Update";
 });
 
-// ── Load feed ────────────────────────────────────────────────
-async function loadFeed() {
+// ── Load ALL updates once, then derive everything from cache ──
+async function loadAllUpdates() {
     feedLoading.style.display = "flex";
-
-    // Remove all cards but keep the loading indicator
-    feedList.querySelectorAll(".update-card").forEach(c => c.remove());
-    const emptyEl = feedList.querySelector(".feed-empty");
-    if (emptyEl) emptyEl.remove();
+    feedList.querySelectorAll(".update-card, .feed-empty").forEach(e => e.remove());
 
     try {
-        const q = query(
-            collection(db, "updates"),
-            orderBy("createdAt", "desc")
-        );
+        const q = query(collection(db, "updates"), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
+        allUpdates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         feedLoading.style.display = "none";
-
-        if (snap.empty) {
-            const empty = document.createElement("div");
-            empty.className = "feed-empty";
-            empty.textContent = "No updates yet. Be the first to chronicle the world.";
-            feedList.appendChild(empty);
-            return;
-        }
-
-        snap.forEach(docSnap => {
-            feedList.appendChild(buildCard(docSnap));
-        });
+        buildCollabList();
+        buildFilterBar();
+        renderFeed();
 
     } catch (err) {
         feedLoading.style.display = "none";
@@ -201,10 +187,161 @@ async function loadFeed() {
     }
 }
 
+// ── Render feed from cache applying active filter ─────────────
+function renderFeed() {
+    feedList.querySelectorAll(".update-card, .feed-empty").forEach(e => e.remove());
+
+    const visible = activeFilter === "all"
+        ? allUpdates
+        : allUpdates.filter(u => u.authorUid === activeFilter);
+
+    if (visible.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "feed-empty";
+        empty.textContent = activeFilter === "all"
+            ? "No updates yet. Be the first to chronicle the world."
+            : "This collaborator hasn't posted yet.";
+        feedList.appendChild(empty);
+        return;
+    }
+
+    visible.forEach(data => feedList.appendChild(buildCard(data)));
+}
+
+// ── Build filter bar chips from unique authors ────────────────
+function buildFilterBar() {
+    const bar = document.getElementById("filterBar");
+    // Keep the "All" chip, remove old author chips
+    bar.querySelectorAll(".filter-chip:not([data-uid='all'])").forEach(c => c.remove());
+
+    const authors = getUniqueAuthors();
+    authors.forEach(({ uid, name }) => {
+        const chip = document.createElement("button");
+        chip.className = "filter-chip";
+        chip.dataset.uid = uid;
+        chip.textContent = name.split(" ")[0]; // first name only for brevity
+        if (uid === activeFilter) chip.classList.add("active");
+        chip.addEventListener("click", () => setFilter(uid));
+        bar.appendChild(chip);
+    });
+
+    // Wire up "All" chip
+    const allChip = bar.querySelector("[data-uid='all']");
+    allChip.classList.toggle("active", activeFilter === "all");
+    allChip.onclick = () => setFilter("all");
+}
+
+function setFilter(uid) {
+    activeFilter = uid;
+    buildFilterBar();
+    renderFeed();
+}
+
+// ── Build collaborator list in sidebar ────────────────────────
+function buildCollabList() {
+    const list = document.getElementById("collabList");
+    const countEl = document.getElementById("collabCount");
+    const authors = getUniqueAuthors();
+
+    countEl.textContent = authors.length;
+    list.innerHTML = "";
+
+    if (authors.length === 0) {
+        list.innerHTML = '<div class="collab-loading">No collaborators yet.</div>';
+        return;
+    }
+
+    authors.forEach(({ uid, name, count }) => {
+        const isYou = currentUser && uid === currentUser.uid;
+        const item = document.createElement("div");
+        item.className = "collab-item" + (isYou ? " is-you" : "");
+
+        item.innerHTML = `
+            <div class="collab-item-avatar">${getInitials(name)}</div>
+            <div class="collab-item-info">
+                <div class="collab-item-name">${escHtml(name)}</div>
+                <div class="collab-item-count">${count} update${count !== 1 ? "s" : ""}</div>
+            </div>
+            <span class="collab-item-arrow">›</span>
+        `;
+
+        item.addEventListener("click", () => openProfileModal(uid, name, count));
+        list.appendChild(item);
+    });
+}
+
+// ── Get unique authors sorted by post count ───────────────────
+function getUniqueAuthors() {
+    const map = new Map();
+    allUpdates.forEach(u => {
+        if (!map.has(u.authorUid)) {
+            map.set(u.authorUid, { uid: u.authorUid, name: u.authorName, count: 0 });
+        }
+        map.get(u.authorUid).count++;
+    });
+    return [...map.values()].sort((a, b) => b.count - a.count);
+}
+
+// ── Profile modal ─────────────────────────────────────────────
+function openProfileModal(uid, name, postCount) {
+    const backdrop = document.getElementById("profileModalBackdrop");
+    const modalAvatar = document.getElementById("modalAvatar");
+    const modalName = document.getElementById("modalName");
+    const modalPosts = document.getElementById("modalPosts");
+    const modalJoined = document.getElementById("modalJoined");
+    const recentList = document.getElementById("modalRecentList");
+    const filterBtn = document.getElementById("modalFilterBtn");
+
+    modalAvatar.textContent = getInitials(name);
+    modalName.textContent = name;
+    modalPosts.textContent = `${postCount} update${postCount !== 1 ? "s" : ""}`;
+    modalJoined.textContent = "Active collaborator";
+
+    // Recent posts from cache
+    recentList.innerHTML = "";
+    const userPosts = allUpdates.filter(u => u.authorUid === uid).slice(0, 3);
+
+    if (userPosts.length === 0) {
+        recentList.innerHTML = '<div class="modal-loading">No updates yet.</div>';
+    } else {
+        userPosts.forEach(u => {
+            const snippet = document.createElement("div");
+            snippet.className = "modal-post-snippet";
+            const timeStr = u.createdAt ? formatTime(u.createdAt.toDate()) : "—";
+            snippet.innerHTML = `
+                <div class="modal-post-text">${escHtml(u.content)}</div>
+                <div class="modal-post-time">${timeStr}</div>
+            `;
+            recentList.appendChild(snippet);
+        });
+    }
+
+    // "View all" button filters feed and closes modal
+    filterBtn.onclick = () => {
+        setFilter(uid);
+        closeProfileModal();
+        // Scroll to feed
+        document.querySelector(".dash-feed").scrollIntoView({ behavior: "smooth" });
+    };
+
+    backdrop.classList.remove("hidden");
+}
+
+function closeProfileModal() {
+    document.getElementById("profileModalBackdrop").classList.add("hidden");
+}
+
+document.getElementById("modalClose").addEventListener("click", closeProfileModal);
+document.getElementById("profileModalBackdrop").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeProfileModal();
+});
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeProfileModal();
+});
+
 // ── Build update card ─────────────────────────────────────────
-function buildCard(docSnap) {
-    const data = docSnap.data();
-    const id = docSnap.id;
+function buildCard(data) {
+    const id = data.id;
     const isOwn = currentUser && data.authorUid === currentUser.uid;
 
     const card = document.createElement("div");
@@ -264,11 +401,14 @@ function enterEditMode(card, data) {
                 content: newText,
                 edited: true,
             });
-            await loadFeed();
+            // Update cache
+            const cached = allUpdates.find(u => u.id === card.dataset.id);
+            if (cached) { cached.content = newText; cached.edited = true; }
+            renderFeed();
         } catch (err) { console.error("Edit failed:", err); }
     });
 
-    actions.querySelector(".cancel-btn").addEventListener("click", () => loadFeed());
+    actions.querySelector(".cancel-btn").addEventListener("click", () => renderFeed());
 }
 
 // ── Delete ───────────────────────────────────────────────────
@@ -276,19 +416,16 @@ async function deleteCard(card, id) {
     if (!confirm("Remove this update from the chronicle?")) return;
     try {
         await deleteDoc(doc(db, "updates", id));
-        card.style.animation = "none";
+        // Remove from cache
+        allUpdates = allUpdates.filter(u => u.id !== id);
         card.style.opacity = "0";
         card.style.transform = "translateY(-6px)";
         card.style.transition = "all 0.3s ease";
         setTimeout(() => {
-            card.remove();
+            renderFeed();
+            buildCollabList();
+            buildFilterBar();
             loadStats(currentUser.uid);
-            if (!feedList.querySelector(".update-card")) {
-                const empty = document.createElement("div");
-                empty.className = "feed-empty";
-                empty.textContent = "No updates yet. Be the first to chronicle the world.";
-                feedList.appendChild(empty);
-            }
         }, 300);
     } catch (err) { console.error("Delete failed:", err); }
 }

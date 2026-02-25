@@ -71,6 +71,11 @@
                     <div class="feed-subtitle">What's happening in Alithia</div>
                 </div>
 
+                <!-- Filter bar -->
+                <div class="filter-bar" id="filterBar">
+                    <button class="filter-chip active" data-uid="all">All Updates</button>
+                </div>
+
                 <!-- Post composer -->
                 <div class="composer" id="composer">
                     <div class="composer-header">
@@ -152,16 +157,38 @@
                     </nav>
                 </div>
 
-                <!-- Collaborators online card (static for now) -->
-                <div class="sidebar-card team-card">
-                    <div class="card-label">The Keeper's Note</div>
-                    <p class="keeper-note" id="keeperNote">
-                        Welcome to the Alithia collaboration hub. Post your updates,
-                        track progress, and keep the world alive.
-                    </p>
+                <!-- Collaborators card -->
+                <div class="sidebar-card collab-card">
+                    <div class="card-label">The Collaboration — <span id="collabCount">0</span> members</div>
+                    <div class="collab-list" id="collabList">
+                        <div class="collab-loading">Gathering the scribes…</div>
+                    </div>
                 </div>
 
             </aside>
+        </div>
+    </div>
+
+    <!-- Profile modal -->
+    <div class="profile-modal-backdrop hidden" id="profileModalBackdrop">
+        <div class="profile-modal" id="profileModal">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-avatar" id="modalAvatar">?</div>
+            <div class="modal-name" id="modalName">—</div>
+            <div class="modal-role">Collaborator</div>
+            <div class="modal-meta">
+                <span id="modalPosts">— posts</span>
+                <span class="modal-meta-dot">·</span>
+                <span id="modalJoined">—</span>
+            </div>
+            <div class="modal-divider"></div>
+            <div class="modal-recent-label">Recent Updates</div>
+            <div class="modal-recent-list" id="modalRecentList">
+                <div class="modal-loading">Loading…</div>
+            </div>
+            <button class="modal-filter-btn" id="modalFilterBtn">
+                View All Their Updates →
+            </button>
         </div>
     </div>
 
