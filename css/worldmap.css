@@ -231,6 +231,42 @@ html, body {
     animation-delay: 2.8s;
 }
 
+.region:nth-child(9) .region-hotspot {
+    animation-delay: 3.2s;
+}
+
+.region:nth-child(10) .region-hotspot {
+    animation-delay: 3.6s;
+}
+
+.region:nth-child(11) .region-hotspot {
+    animation-delay: 4.0s;
+}
+
+.region:nth-child(12) .region-hotspot {
+    animation-delay: 4.4s;
+}
+
+.region:nth-child(13) .region-hotspot {
+    animation-delay: 4.8s;
+}
+
+.region:nth-child(14) .region-hotspot {
+    animation-delay: 5.2s;
+}
+
+.region:nth-child(15) .region-hotspot {
+    animation-delay: 5.6s;
+}
+
+.region:nth-child(16) .region-hotspot {
+    animation-delay: 6.0s;
+}
+
+.region:nth-child(17) .region-hotspot {
+    animation-delay: 6.4s;
+}
+
 @keyframes pulseGlow {
     0%, 100% {
         transform: scale(1);
