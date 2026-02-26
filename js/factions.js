@@ -227,17 +227,27 @@ function openEntryModal(faction) {
     document.getElementById("modalRegion").textContent = faction.region || "Unknown";
     document.getElementById("modalMembers").textContent = faction.members || "Unknown";
 
-    // Doc embed or placeholder
+    // Google Doc link button or placeholder
     const frameEl = document.getElementById("modalDocFrame");
     frameEl.innerHTML = "";
     if (faction.docUrl && faction.docUrl.trim()) {
-        const embedUrl = toEmbedUrl(faction.docUrl.trim());
-        const iframe = document.createElement("iframe");
-        iframe.className = "factions-doc-iframe";
-        iframe.src = embedUrl;
-        iframe.setAttribute("allowfullscreen", "");
-        iframe.setAttribute("loading", "lazy");
-        frameEl.appendChild(iframe);
+        frameEl.innerHTML = `
+            <div class="factions-doc-linked">
+                <div class="factions-doc-linked-info">
+                    <span class="factions-doc-linked-icon">📄</span>
+                    <div class="factions-doc-linked-text">
+                        <span class="factions-doc-linked-title">Full Document Available</span>
+                        <span class="factions-doc-linked-hint">Opens in Google Docs — sign-in may be required</span>
+                    </div>
+                </div>
+                <a class="factions-doc-open-btn"
+                   href="${escHtml(faction.docUrl.trim())}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Open in Google Docs →
+                </a>
+            </div>
+        `;
     } else {
         frameEl.innerHTML = `
             <div class="factions-doc-placeholder">
@@ -245,7 +255,7 @@ function openEntryModal(faction) {
                 <div class="factions-doc-placeholder-title">Document Pending</div>
                 <div class="factions-doc-placeholder-body">
                     The full faction document has not yet been linked.
-                    When a Google Doc is ready, a Keeper can attach it via
+                    When a Google Doc is ready, anyone can attach it via
                     <code>Edit Faction → Google Doc URL</code> and it will appear here automatically.
                 </div>
             </div>
@@ -275,11 +285,6 @@ document.getElementById("entryModalClose").addEventListener("click", closeEntryM
 document.getElementById("entryModalBackdrop").addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeEntryModal();
 });
-
-function toEmbedUrl(url) {
-    if (url.includes("/pub") || url.includes("embedded=true")) return url;
-    return url.replace(/\/(edit|view|preview).*$/, "/pub?embedded=true");
-}
 
 // ── Add / Edit form modal ─────────────────────────────────────
 function openEntryForm(existing = null) {

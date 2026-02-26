@@ -255,16 +255,27 @@ function openEntryModal(character) {
     document.getElementById("modalRace").textContent = character.race || "Unknown";
     document.getElementById("modalWrittenByDetail").textContent = character.writtenBy || character.authorName || "Unknown";
 
-    // Doc embed or placeholder
+    // Google Doc link button or placeholder
     const frameEl = document.getElementById("modalDocFrame");
     frameEl.innerHTML = "";
     if (character.docUrl && character.docUrl.trim()) {
-        const iframe = document.createElement("iframe");
-        iframe.className = "characters-doc-iframe";
-        iframe.src = toEmbedUrl(character.docUrl.trim());
-        iframe.setAttribute("allowfullscreen", "");
-        iframe.setAttribute("loading", "lazy");
-        frameEl.appendChild(iframe);
+        frameEl.innerHTML = `
+            <div class="characters-doc-linked">
+                <div class="characters-doc-linked-info">
+                    <span class="characters-doc-linked-icon">📄</span>
+                    <div class="characters-doc-linked-text">
+                        <span class="characters-doc-linked-title">Full Document Available</span>
+                        <span class="characters-doc-linked-hint">Opens in Google Docs — sign-in may be required</span>
+                    </div>
+                </div>
+                <a class="characters-doc-open-btn"
+                   href="${escHtml(character.docUrl.trim())}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Open in Google Docs →
+                </a>
+            </div>
+        `;
     } else {
         frameEl.innerHTML = `
             <div class="characters-doc-placeholder">
@@ -272,7 +283,7 @@ function openEntryModal(character) {
                 <div class="characters-doc-placeholder-title">Document Pending</div>
                 <div class="characters-doc-placeholder-body">
                     The full character document has not yet been linked.
-                    When a Google Doc is ready, a Keeper can attach it via
+                    When a Google Doc is ready, anyone can attach it via
                     <code>Edit Character → Google Doc URL</code> and it will appear here automatically.
                 </div>
             </div>
@@ -302,11 +313,6 @@ document.getElementById("entryModalClose").addEventListener("click", closeEntryM
 document.getElementById("entryModalBackdrop").addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeEntryModal();
 });
-
-function toEmbedUrl(url) {
-    if (url.includes("/pub") || url.includes("embedded=true")) return url;
-    return url.replace(/\/(edit|view|preview).*$/, "/pub?embedded=true");
-}
 
 // ── Add / Edit form modal ─────────────────────────────────────
 function openEntryForm(existing = null) {
