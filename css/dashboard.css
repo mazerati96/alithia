@@ -220,25 +220,37 @@ html, body {
     }
 
 .notif-dot {
-    display: inline-block; /* required — span ignores width/height without this */
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: notifPulse 2s ease-in-out infinite;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--green);
+    background: rgba(61, 255, 143, 0.08);
+    font-family: var(--font-display);
+    font-size: 0.45rem;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-transform: uppercase;
+    white-space: nowrap;
     flex-shrink: 0;
+    cursor: default;
+    animation: notifPulse 2.5s ease-in-out infinite;
 }
 
+    .notif-dot::before {
+        content: "✦";
+        font-size: 0.5rem;
+    }
+
 @keyframes notifPulse {
-    0%,100% {
-        transform: scale(1);
+    0%, 100% {
+        box-shadow: 0 0 6px rgba(61, 255, 143, 0.4), 0 0 16px rgba(61, 255, 143, 0.15);
         opacity: 1;
     }
 
     50% {
-        transform: scale(1.4);
-        opacity: 0.7;
+        box-shadow: 0 0 12px rgba(61, 255, 143, 0.7), 0 0 28px rgba(61, 255, 143, 0.3);
+        opacity: 0.85;
     }
 }
 
