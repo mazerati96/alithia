@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heartle — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/heartle.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+        </ul>
+    </div>
+
+    <div class="page-transition"></div>
+
+    <!-- Auth guard overlay -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <div class="og-wrap hidden" id="ogWrap">
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- HERO SECTION                                        -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <section class="og-hero">
+            <div class="hero-grid-overlay"></div>
+
+            <div class="hero-content">
+                <div class="hero-eyebrow">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text" id="heroEyebrow">THE CONTINENT OF ALITHIA</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+
+                <h1 class="hero-title" id="heroTitle">HEARTLE</h1>
+
+                <div class="hero-eyebrow hero-eyebrow-lower">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text" id="heroTagline">WHERE THE STONE BLEEDS AND SILENCE RULES</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+
+                <div class="hero-tags" id="heroTags">
+                    <!-- Populated by JS from Firestore -->
+                    <span class="hero-tag">REGION</span>
+                    <span class="tag-dot">&middot;</span>
+                    <span class="hero-tag">UNCLAIMED</span>
+                </div>
+
+                <div class="hero-runes" aria-hidden="true">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+            </div>
+
+            <div class="hero-scroll-hint">
+                <span>SCROLL</span>
+                <div class="scroll-arrow"></div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- LORE BODY                                           -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="og-body">
+
+            <!-- Meta bar: breadcrumb + keeper controls -->
+            <div class="og-meta-bar">
+                <nav class="og-breadcrumb">
+                    <a href="worldmap.html">World Map</a>
+                    <span class="bc-sep">›</span>
+                    <a href="lore-codex.html">Lore Codex</a>
+                    <span class="bc-sep">›</span>
+                    <span class="bc-current">Heartle</span>
+                </nav>
+
+                <div class="og-meta-right">
+                    <span class="og-last-edited hidden" id="ogLastEdited"></span>
+                    <!-- Keeper-only: toggle edit mode -->
+                    <button class="og-edit-toggle hidden" id="ogEditToggle">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                        Edit Page
+                    </button>
+                </div>
+            </div>
+
+            <!-- Edit mode banner (keeper only) -->
+            <div class="og-edit-banner hidden" id="ogEditBanner">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                <span>You are in <strong>edit mode</strong>. Changes save section by section.</span>
+                <button class="edit-banner-exit" id="editBannerExit">Exit Edit Mode</button>
+            </div>
+
+            <!-- Sections container -->
+            <div class="og-sections" id="ogSections">
+                <div class="og-loading" id="ogLoading">
+                    <span class="loading-rune">ᚠ</span>
+                    <span>Consulting the ancient records…</span>
+                </div>
+            </div>
+
+            <!-- Add Section button (keeper + edit mode only) -->
+            <div class="og-add-section-wrap hidden" id="ogAddSectionWrap">
+                <button class="og-add-section-btn" id="ogAddSectionBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add New Section
+                </button>
+            </div>
+
+            <!-- Back navigation -->
+            <div class="og-footer-nav">
+                <a href="worldmap.html" class="og-footer-link">← World Map</a>
+                <a href="lore-codex.html" class="og-footer-link">Lore Codex →</a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION EDITOR MODAL                                    -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="og-modal-backdrop hidden" id="editorBackdrop">
+        <div class="og-modal og-editor-modal" id="editorModal">
+            <div class="og-modal-header">
+                <div class="og-modal-title" id="editorModalTitle">Edit Section</div>
+                <button class="og-modal-close" id="editorClose">✕</button>
+            </div>
+
+            <!-- Section title input -->
+            <div class="editor-field">
+                <label class="editor-label">Section Title</label>
+                <input type="text" class="editor-input" id="editorTitle"
+                       placeholder="e.g. Geography & Climate" maxlength="80" />
+            </div>
+
+            <!-- RTF Toolbar -->
+            <div class="rte-toolbar" id="rteToolbar">
+                <div class="rte-toolbar-group">
+                    <button class="rte-btn" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                    <button class="rte-btn" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+                    <button class="rte-btn" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                </div>
+                <div class="rte-toolbar-sep"></div>
+                <div class="rte-toolbar-group">
+                    <button class="rte-btn" data-cmd="formatBlock" data-val="h2" title="Heading">H2</button>
+                    <button class="rte-btn" data-cmd="formatBlock" data-val="h3" title="Sub-heading">H3</button>
+                    <button class="rte-btn" data-cmd="formatBlock" data-val="p" title="Paragraph">¶</button>
+                </div>
+                <div class="rte-toolbar-sep"></div>
+                <div class="rte-toolbar-group">
+                    <button class="rte-btn" data-cmd="insertUnorderedList" title="Bullet list">• List</button>
+                    <button class="rte-btn" data-cmd="formatBlock" data-val="blockquote" title="Quote">❝</button>
+                </div>
+                <div class="rte-toolbar-sep"></div>
+                <!-- Wiki link insert -->
+                <div class="rte-toolbar-group">
+                    <button class="rte-btn rte-btn-wiki" id="rteWikiBtn" title="Insert wiki link to another page">[[Link]]</button>
+                </div>
+            </div>
+
+            <!-- Wiki link help tooltip -->
+            <div class="rte-wiki-help" id="rteWikiHelp">
+                <strong>Wiki Link syntax:</strong> type <code>[[type:Name]]</code> directly in the editor.<br />
+                Types: <code>faction</code> · <code>character</code> · <code>region</code> · <code>history</code> · <code>magic</code><br />
+                Example: <code>[[faction:Iron Brotherhood]]</code> → clickable link to Factions page.
+                <button class="rte-wiki-help-close" id="rteWikiHelpClose">Got it</button>
+            </div>
+
+            <!-- Editable body -->
+            <div class="rte-body" id="rteBody" contenteditable="true"
+                 data-placeholder="Write the lore for this section…
+
+Use [[faction:Name]], [[character:Name]], [[region:Name]] etc. to link to other pages."></div>
+
+            <!-- Google Doc URL -->
+            <div class="editor-field" style="margin-top: 1rem;">
+                <label class="editor-label">
+                    Google Doc URL
+                    <span class="editor-hint">(optional — opens as a button on the page)</span>
+                </label>
+                <input type="url" class="editor-input" id="editorDocUrl"
+                       placeholder="https://docs.google.com/document/d/…" />
+            </div>
+
+            <div class="editor-msg hidden" id="editorMsg"></div>
+
+            <div class="og-modal-footer">
+                <button class="editor-save-btn" id="editorSaveBtn">Save Section</button>
+                <button class="editor-cancel-btn" id="editorCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- DELETE CONFIRM MODAL                                    -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="og-modal-backdrop hidden" id="deleteBackdrop">
+        <div class="og-modal og-delete-modal" id="deleteModal">
+            <div class="og-modal-rune">ᚦ</div>
+            <div class="og-modal-title">Delete this section?</div>
+            <p class="og-modal-body">
+                "<span id="deleteSectionTitle">this section</span>" will be permanently removed from Heartle's record.
+            </p>
+            <div class="og-modal-error hidden" id="deleteError"></div>
+            <div class="og-modal-footer og-modal-footer-centered">
+                <button class="editor-cancel-btn" id="deleteCancelBtn">Keep It</button>
+                <button class="og-confirm-delete-btn" id="deleteConfirmBtn">Delete Section</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- WIKI LINK INSERT DIALOG                                 -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="og-modal-backdrop hidden" id="wikiDialogBackdrop">
+        <div class="og-modal og-wiki-dialog" id="wikiDialog">
+            <div class="og-modal-header">
+                <div class="og-modal-title">Insert Wiki Link</div>
+                <button class="og-modal-close" id="wikiDialogClose">✕</button>
+            </div>
+            <div class="editor-field">
+                <label class="editor-label">Link Type</label>
+                <select class="editor-input editor-select" id="wikiLinkType">
+                    <option value="faction">⚔ Faction</option>
+                    <option value="character">👤 Character</option>
+                    <option value="region">🗺 Region</option>
+                    <option value="history">📜 History</option>
+                    <option value="magic">✧ Magic</option>
+                </select>
+            </div>
+            <div class="editor-field">
+                <label class="editor-label">Name</label>
+                <input type="text" class="editor-input" id="wikiLinkName"
+                       placeholder="e.g. Iron Brotherhood" maxlength="60" />
+            </div>
+            <div class="og-modal-footer">
+                <button class="editor-save-btn" id="wikiInsertBtn">Insert Link</button>
+                <button class="editor-cancel-btn" id="wikiCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/heartle.js"></script>
+</body>
+</html>
