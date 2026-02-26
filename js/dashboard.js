@@ -1,9 +1,5 @@
 // ============================================================
 //  js/dashboard.js  —  Alithia Collaborator Dashboard
-//  Features: auth guard, notification dot, category tags,
-//  announcements (keeper), reactions, lore claims, profile
-//  editing, collaborator list from users collection, global
-//  search, author + category filters
 // ============================================================
 
 import { auth, db } from "../auth/firebase-config.js";

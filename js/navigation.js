@@ -46,10 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ============================================================
 //  Page transition helper — call from any page's JS:
-//
-//    import { navigateTo } from './navigation.js';  ← if using modules
-//
-//  OR just call window.navigateTo(url) from non-module scripts
 // ============================================================
 
 function navigateTo(url) {
