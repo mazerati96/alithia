@@ -1,5 +1,5 @@
 /* ============================================================
-   OGITH — COUNTRY / CONTINENT PAGE  (Alithia template)
+   Ogith — COUNTRY / CONTINENT PAGE  (Alithia template)
    Copy this file → rename → change colour accent if desired.
    All shared tokens live in :root below.
    ============================================================ */
@@ -162,6 +162,9 @@ html, body {
     text-align: center;
     animation: heroFadeIn 1.4s ease-out both;
     padding: 2rem;
+    /* Ensure the content block itself doesn't overflow */
+    width: 100%;
+    max-width: 100vw;
 }
 
 @keyframes heroFadeIn {
@@ -213,16 +216,36 @@ html, body {
     text-transform: uppercase;
 }
 
-/* Country name */
+/* ── COUNTRY NAME — RESPONSIVE FIX ────────────────────────────
+   THE ORIGINAL PROBLEM:
+     font-size: clamp(4rem, 14vw, 10rem)
+   At 1440px wide, 14vw = ~202px per character. "CHERYNDRAKA"
+   (11 chars) × 202px + letter-spacing blows far past viewport.
+
+   THE FIX — two-part:
+   1. Lower the fluid vw scalar from 14vw → 6.5vw.
+      Rule of thumb for your other CSS files:
+        safe_vw = 85 / expected_max_character_count
+        e.g. 11 chars → 85/11 ≈ 7.7vw  (use 6.5 for safety)
+   2. Tighten letter-spacing slightly (0.18em → 0.12em).
+      Letter-spacing is multiplicative — at huge font sizes,
+      0.18em adds enormous horizontal space per character.
+   3. Add max-width + overflow guard as a hard fallback.
+   ─────────────────────────────────────────────────────────── */
 .hero-title {
     font-family: var(--font-display);
-    font-size: clamp(4rem, 14vw, 10rem);
+    font-size: clamp(2.5rem, 6.5vw, 10rem);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
     color: var(--green);
     text-shadow: 0 0 40px rgba(61,255,143,0.25), 0 0 90px rgba(61,255,143,0.08);
     line-height: 1;
     margin-bottom: 0;
+    /* Hard fallback: if it somehow still overflows, clip cleanly */
+    max-width: 95vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Tags row */
@@ -1280,6 +1303,6 @@ html, body {
     }
 
     .hero-title {
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
     }
 }
