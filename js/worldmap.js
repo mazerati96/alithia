@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         region10: { name: 'Wruil', link: '../pages/wruil.html' },
         region11: { name: 'Region Name', link: 'pages/region11.html' },
         region12: { name: 'Ulm', link: '../pages/ulm.html' },
-        region13: { name: 'Unknown Islands', link: '../pages/unknown-islands.html' },
+        region13: { name: 'Unnamed Islands', link: '../pages/unnamed-islands.html' },
         region14: { name: 'Kindush', link: '../pages/kindush.html' },
         region15: { name: 'Elreach', link: '../pages/elreach.html' },
         region16: { name: 'Mistwelia', link: '../pages/mistwelia.html' },
