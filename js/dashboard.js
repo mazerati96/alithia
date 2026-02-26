@@ -76,11 +76,15 @@ onAuthStateChanged(auth, async (user) => {
         isKeeper = userDoc.data().role === "keeper";
     }
 
+    // Grab lastVisited now so checkNotifications doesn't need its own getDoc,
+    // and so we can guarantee it runs before updateLastVisited overwrites the value.
+    const lastVisited = userDoc.exists() ? userDoc.data()?.lastVisited?.toDate?.() || new Date(0) : new Date(0);
+
     revealDashboard(user);
     await Promise.all([loadAllUpdates(), loadAnnouncements(), loadAllUsers(), loadClaims()]);
-    checkNotifications();
+    checkNotifications(lastVisited);   // sync now — no await needed, no race possible
     await loadStats(user.uid);
-    updateLastVisited(user.uid);
+    await updateLastVisited(user.uid); // awaited so the write is confirmed
 });
 
 function revealDashboard(user) {
@@ -114,11 +118,14 @@ function revealDashboard(user) {
 signOutBtn.addEventListener("click", async () => { await signOut(auth); window.location.href = "login.html"; });
 
 // ── Notifications ─────────────────────────────────────────────
-async function checkNotifications() {
+// lastVisited is passed in directly from the already-fetched user doc in the
+// auth handler — no extra getDoc, no race window with updateLastVisited.
+function checkNotifications(lastVisited) {
     try {
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        const lastVisited = userDoc.data()?.lastVisited?.toDate?.() || new Date(0);
-        const hasNew = allUpdates.some(u => u.createdAt && u.createdAt.toDate() > lastVisited && u.authorUid !== currentUser.uid);
+        const cutoff = lastVisited || new Date(0);
+        const hasNew = allUpdates.some(
+            u => u.createdAt && u.createdAt.toDate() > cutoff && u.authorUid !== currentUser.uid
+        );
         if (hasNew) notifDot.classList.remove("hidden");
     } catch (e) { /* silent */ }
 }
