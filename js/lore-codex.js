@@ -1,8 +1,5 @@
 // ============================================================
 //  js/lore-codex.js  —  Alithia Lore Codex
-//  Features: auth guard, category filter, entry grid, entry
-//  viewer modal with Google Doc embed / placeholder, keeper
-//  add/edit/delete, search overlay
 // ============================================================
 
 import { auth, db } from "../auth/firebase-config.js";
@@ -157,18 +154,18 @@ function buildCard(entry, index) {
     const hasDoc = !!(entry.docUrl && entry.docUrl.trim());
 
     card.innerHTML = `
-        <div class="lore-card-inner">
-            <div class="lore-card-top">
-                <span class="lore-card-cat">${catLabel}</span>
-                ${hasDoc ? '<span class="lore-card-doc-badge">📋 doc linked</span>' : ""}
-            </div>
-            <div class="lore-card-title">${escHtml(entry.title || "Untitled Entry")}</div>
-            <div class="lore-card-desc">${escHtml(desc) || "<em>No synopsis yet.</em>"}</div>
-            <div class="lore-card-footer">
-                <span class="lore-card-author">${escHtml(entry.authorName || "—")}</span>
-                <span class="lore-card-arrow">→</span>
-            </div>
-        </div>
+<div class="lore-card-inner">
+    <div class="lore-card-top">
+        <span class="lore-card-cat">${catLabel}</span>
+        ${hasDoc ? '<span class="lore-card-doc-badge">📋 doc linked</span>' : ""}
+    </div>
+    <div class="lore-card-title">${escHtml(entry.title || "Untitled Entry")}</div>
+    <div class="lore-card-desc">${escHtml(desc) || "<em>No synopsis yet.</em>"}</div>
+    <div class="lore-card-footer">
+        <span class="lore-card-author">${escHtml(entry.authorName || "—")}</span>
+        <span class="lore-card-arrow">→</span>
+    </div>
+</div>
     `;
 
     card.addEventListener("click", () => openEntryModal(entry));
@@ -198,30 +195,39 @@ function openEntryModal(entry) {
 
     document.getElementById("modalDesc").textContent = entry.synopsis || entry.content || "";
 
-    // Google Doc embed or placeholder
+    // Google Doc link button or placeholder
     const frameEl = document.getElementById("modalDocFrame");
     frameEl.innerHTML = "";
 
     if (entry.docUrl && entry.docUrl.trim()) {
-        // Convert regular Google Doc URL to embed URL
-        const embedUrl = toEmbedUrl(entry.docUrl.trim());
-        const iframe = document.createElement("iframe");
-        iframe.className = "lore-doc-iframe";
-        iframe.src = embedUrl;
-        iframe.setAttribute("allowfullscreen", "");
-        iframe.setAttribute("loading", "lazy");
-        frameEl.appendChild(iframe);
+        frameEl.innerHTML = `
+<div class="lore-doc-linked">
+    <div class="lore-doc-linked-info">
+        <span class="lore-doc-linked-icon">📄</span>
+        <div class="lore-doc-linked-text">
+            <span class="lore-doc-linked-title">Full Document Available</span>
+            <span class="lore-doc-linked-hint">Opens in Google Docs — sign-in may be required</span>
+        </div>
+    </div>
+    <a class="lore-doc-open-btn"
+       href="${escHtml(entry.docUrl.trim())}"
+       target="_blank"
+       rel="noopener noreferrer">
+        Open in Google Docs →
+    </a>
+</div>
+        `;
     } else {
         frameEl.innerHTML = `
-            <div class="lore-doc-placeholder">
-                <div class="lore-doc-placeholder-rune">ᚦ</div>
-                <div class="lore-doc-placeholder-title">Document Pending</div>
-                <div class="lore-doc-placeholder-body">
-                    The full lore document for this entry has not yet been linked.
-                    When a Google Doc is ready, a Keeper can attach it via
-                    <code>Edit Entry → Google Doc URL</code> and it will appear here automatically.
-                </div>
-            </div>
+<div class="lore-doc-placeholder">
+    <div class="lore-doc-placeholder-rune">ᚦ</div>
+    <div class="lore-doc-placeholder-title">Document Pending</div>
+    <div class="lore-doc-placeholder-body">
+        The full lore document for this entry has not yet been linked.
+        When a Google Doc is ready, anyone can attach it via
+        <code>Edit Entry → Google Doc URL</code> and it will appear here automatically.
+    </div>
+</div>
         `;
     }
 
@@ -248,16 +254,6 @@ document.getElementById("entryModalClose").addEventListener("click", closeEntryM
 document.getElementById("entryModalBackdrop").addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeEntryModal();
 });
-
-// Convert a regular Google Docs share URL to an embed URL
-function toEmbedUrl(url) {
-    // Already an embed URL — return as-is
-    if (url.includes("/pub") || url.includes("embedded=true")) return url;
-
-    // Typical pattern: https://docs.google.com/document/d/DOC_ID/edit
-    // becomes:         https://docs.google.com/document/d/DOC_ID/pub?embedded=true
-    return url.replace(/\/(edit|view|preview).*$/, "/pub?embedded=true");
-}
 
 // ── Add / Edit form modal ─────────────────────────────────────
 function openEntryForm(existingEntry = null) {
@@ -428,9 +424,9 @@ function runSearch() {
         const item = document.createElement("div");
         item.className = "lore-search-result";
         item.innerHTML = `
-            <div class="lore-search-result-cat">${CAT_LABELS[entry.category] || entry.category}</div>
-            <div class="lore-search-result-title">${highlight(escHtml(entry.title || "Untitled"), q)}</div>
-            <div class="lore-search-result-desc">${escHtml(entry.synopsis || "")}</div>
+<div class="lore-search-result-cat">${CAT_LABELS[entry.category] || entry.category}</div>
+<div class="lore-search-result-title">${highlight(escHtml(entry.title || "Untitled"), q)}</div>
+<div class="lore-search-result-desc">${escHtml(entry.synopsis || "")}</div>
         `;
         item.addEventListener("click", () => {
             closeLoreSearch();
