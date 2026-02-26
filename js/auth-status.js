@@ -24,7 +24,7 @@ onAuthStateChanged(auth, (user) => {
         if (link.getAttribute("href")?.includes("login.html")) {
             if (user) {
                 // Logged in — point to dashboard instead
-                link.textContent = "MY DASHBOARD";
+                link.textContent = "DASHBOARD";
                 link.setAttribute("href", "dashboard.html");
             } else {
                 // Not logged in — ensure it says login
