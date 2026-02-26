@@ -250,6 +250,7 @@ function buildCategoryBar() {
 function buildCard(data) {
     const id = data.id;
     const isOwn = currentUser && data.authorUid === currentUser.uid;
+    const canDelete = isOwn || isKeeper;
     const cat = data.category || "misc";
     const catLabels = { lore: "📜 Lore", character: "👤 Character", map: "🗺 Map", mechanics: "⚙ Mechanics", misc: "✦ Misc" };
 
@@ -270,16 +271,20 @@ function buildCard(data) {
         </div>
         <div class="card-body" data-display>${escHtml(data.content)}</div>
         <div class="card-reactions" data-reactions></div>
-        ${isOwn ? `<div class="card-actions" data-actions>
-            <button class="card-action-btn edit-btn">Edit</button>
-            <button class="card-action-btn delete-btn">Delete</button>
-        </div>`: ""}
+        ${canDelete ? `<div class="card-actions" data-actions>
+            ${isOwn ? `<button class="card-action-btn edit-btn">Edit</button>` : ""}
+            <button class="card-action-btn delete-btn${!isOwn && isKeeper ? " keeper-delete-btn" : ""}">
+                ${!isOwn && isKeeper ? "✦ Remove" : "Delete"}
+            </button>
+        </div>` : ""}
     `;
 
     buildReactions(card, data);
 
     if (isOwn) {
         card.querySelector(".edit-btn").addEventListener("click", () => enterEditMode(card, data));
+    }
+    if (canDelete) {
         card.querySelector(".delete-btn").addEventListener("click", () => deleteCard(card, id));
     }
 
@@ -497,33 +502,53 @@ function buildCollabList() {
     const fromPosts = getUniqueAuthors();
     const merged = new Map();
 
-    allUsers.forEach(u => merged.set(u.uid, { uid: u.uid, name: u.username || u.email || "Unknown", count: 0 }));
+    allUsers.forEach(u => merged.set(u.uid, { uid: u.uid, name: u.username || u.email || "Unknown", role: u.role || "collaborator", count: 0 }));
     fromPosts.forEach(a => {
         if (merged.has(a.uid)) merged.get(a.uid).count = a.count;
-        else merged.set(a.uid, a);
+        else merged.set(a.uid, { ...a, role: "collaborator" });
     });
 
-    const authors = [...merged.values()].sort((a, b) => b.count - a.count);
-    countEl.textContent = authors.length;
+    const all = [...merged.values()];
+    countEl.textContent = all.length;
     list.innerHTML = "";
 
-    if (authors.length === 0) { list.innerHTML = '<div class="collab-loading">No collaborators yet.</div>'; return; }
+    if (all.length === 0) { list.innerHTML = '<div class="collab-loading">No collaborators yet.</div>'; return; }
 
-    authors.forEach(({ uid, name, count }) => {
+    // Separate into keepers and collaborators
+    const keepers = all.filter(u => u.role === "keeper").sort((a, b) => b.count - a.count);
+    const collabs = all.filter(u => u.role !== "keeper").sort((a, b) => b.count - a.count);
+
+    function renderCollabItem({ uid, name, count, role }) {
         const isYou = currentUser && uid === currentUser.uid;
         const item = document.createElement("div");
         item.className = "collab-item" + (isYou ? " is-you" : "");
         item.innerHTML = `
-            <div class="collab-item-avatar">${getInitials(name)}</div>
+            <div class="collab-item-avatar${role === "keeper" ? " keeper-avatar" : ""}">${getInitials(name)}</div>
             <div class="collab-item-info">
-                <div class="collab-item-name">${escHtml(name)}</div>
+                <div class="collab-item-name">${escHtml(name)}${isYou ? ' <span class="collab-you-tag">you</span>' : ""}</div>
                 <div class="collab-item-count">${count} update${count !== 1 ? "s" : ""}</div>
             </div>
             <span class="collab-item-arrow">›</span>
         `;
         item.addEventListener("click", () => openProfileModal(uid, name, count));
-        list.appendChild(item);
-    });
+        return item;
+    }
+
+    if (keepers.length > 0) {
+        const header = document.createElement("div");
+        header.className = "collab-section-header";
+        header.innerHTML = `<span class="collab-section-icon">✦</span> Keeper${keepers.length > 1 ? "s" : ""}`;
+        list.appendChild(header);
+        keepers.forEach(u => list.appendChild(renderCollabItem(u)));
+    }
+
+    if (collabs.length > 0) {
+        const header = document.createElement("div");
+        header.className = "collab-section-header";
+        header.innerHTML = `<span class="collab-section-icon">⚔</span> Collaborators`;
+        list.appendChild(header);
+        collabs.forEach(u => list.appendChild(renderCollabItem(u)));
+    }
 }
 
 function getUniqueAuthors() {
@@ -788,21 +813,21 @@ function runSearch() {
     // Search updates
     allUpdates.forEach(u => {
         if (u.content.toLowerCase().includes(query) || u.authorName.toLowerCase().includes(query)) {
-            results.push({ type: "Update", text: u.content, meta: `by ${u.authorName} · ${u.createdAt ? formatTime(u.createdAt.toDate()) : "—"}`, query });
+            results.push({ type: "Update", id: u.id, authorUid: u.authorUid, text: u.content, meta: `by ${u.authorName} · ${u.createdAt ? formatTime(u.createdAt.toDate()) : "—"}`, query });
         }
     });
 
     // Search announcements
     announcements.forEach(a => {
         if (a.content.toLowerCase().includes(query)) {
-            results.push({ type: "Announcement", text: a.content, meta: `Keeper · ${a.createdAt ? formatTime(a.createdAt.toDate()) : "—"}`, query });
+            results.push({ type: "Announcement", id: null, text: a.content, meta: `Keeper · ${a.createdAt ? formatTime(a.createdAt.toDate()) : "—"}`, query });
         }
     });
 
     // Search claims
     allClaims.forEach(c => {
         if (c.topic.toLowerCase().includes(query) || c.claimedByName.toLowerCase().includes(query)) {
-            results.push({ type: "Lore Claim", text: `${c.topic} (${c.category})`, meta: `claimed by ${c.claimedByName}`, query });
+            results.push({ type: "Lore Claim", id: null, text: `${c.topic} (${c.category})`, meta: `claimed by ${c.claimedByName}`, query });
         }
     });
 
@@ -817,10 +842,13 @@ function runSearch() {
         const item = document.createElement("div");
         item.className = "search-result-item";
         item.innerHTML = `
-            <div class="search-result-type">${r.type}</div>
+            <div class="search-result-type">${r.type}${r.id ? ' <span class="search-result-goto">↵ jump to post</span>' : ""}</div>
             <div class="search-result-text">${highlightMatch(escHtml(r.text), r.query)}</div>
             <div class="search-result-meta">${r.meta}</div>
         `;
+        if (r.id) {
+            item.addEventListener("click", () => jumpToPost(r.id, r.authorUid));
+        }
         searchResults.appendChild(item);
     });
 }
@@ -828,6 +856,32 @@ function runSearch() {
 function highlightMatch(text, query) {
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
     return text.replace(regex, '<span class="search-highlight">$1</span>');
+}
+
+function jumpToPost(id, authorUid) {
+    // Close search overlay
+    searchOverlay.classList.add("hidden");
+    searchInput.value = "";
+    searchResults.innerHTML = '<div class="search-hint">Start typing to search the chronicle…</div>';
+
+    // Clear any filters that might hide the post, then re-render
+    const needsFilterReset = (activeFilter !== "all" && activeFilter !== authorUid) || activeCat !== "all";
+    if (needsFilterReset) {
+        activeFilter = "all";
+        activeCat = "all";
+        buildFilterBar();
+        buildCategoryBar();
+        renderFeed();
+    }
+
+    // Wait a tick for the DOM to settle, then find and scroll to the card
+    requestAnimationFrame(() => {
+        const card = feedList.querySelector(`.update-card[data-id="${id}"]`);
+        if (!card) return;
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.add("card-flash");
+        setTimeout(() => card.classList.remove("card-flash"), 1800);
+    });
 }
 
 // ── Helpers ───────────────────────────────────────────────────

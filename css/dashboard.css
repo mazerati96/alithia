@@ -1618,6 +1618,101 @@ html, body {
     font-size: 0.9rem;
 }
 
+/* Search result "jump to post" label */
+.search-result-goto {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.62rem;
+    color: rgba(61,255,143,0.35);
+    letter-spacing: 0.05em;
+    margin-left: 0.4rem;
+    text-transform: none;
+}
+
+.search-result-item[data-jumpable]:hover .search-result-goto,
+.search-result-item:hover .search-result-goto {
+    color: var(--green-dim);
+}
+
+/* Card flash highlight (search jump-to) */
+@keyframes cardFlash {
+    0% {
+        box-shadow: 0 0 0 2px var(--green), 0 0 30px rgba(61,255,143,0.35);
+        border-color: var(--green);
+    }
+
+    60% {
+        box-shadow: 0 0 0 2px var(--green), 0 0 30px rgba(61,255,143,0.35);
+        border-color: var(--green);
+    }
+
+    100% {
+        box-shadow: none;
+        border-color: var(--green-border);
+    }
+}
+
+.update-card.card-flash {
+    animation: cardFlash 1.8s ease forwards;
+}
+
+/* Keeper delete button styling */
+.keeper-delete-btn {
+    color: rgba(255, 107, 107, 0.7) !important;
+    border-color: rgba(255, 107, 107, 0.3) !important;
+}
+
+    .keeper-delete-btn:hover {
+        color: #ff6b6b !important;
+        border-color: rgba(255, 107, 107, 0.7) !important;
+        background: rgba(255, 107, 107, 0.06) !important;
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.15) !important;
+    }
+
+/* Collab list section headers */
+.collab-section-header {
+    font-family: var(--font-display);
+    font-size: 0.48rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+    padding: 0.55rem 0 0.3rem;
+    margin-top: 0.2rem;
+    border-top: 1px solid var(--green-border);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+    .collab-section-header:first-child {
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+    }
+
+.collab-section-icon {
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+
+/* Keeper avatar ring */
+.collab-item-avatar.keeper-avatar {
+    border-color: var(--green);
+    box-shadow: 0 0 10px rgba(61,255,143,0.3);
+    color: var(--green);
+}
+
+/* "you" tag in collab list */
+.collab-you-tag {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.68rem;
+    color: rgba(61,255,143,0.4);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    text-transform: none;
+}
+
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
     .dash-body {
