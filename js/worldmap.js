@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const regionData = {
         region1: { name: 'Region Name', link: 'pages/region1.html' },
         region2: { name: 'Region Name', link: 'pages/region2.html' },
-        region3: { name: 'Region Name', link: 'pages/region3.html' },
+        region3: { name: 'Ogith', link: 'pages/ogith.html' },
         region4: { name: 'Region Name', link: 'pages/region4.html' },
         region5: { name: 'Region Name', link: 'pages/region5.html' },
         region6: { name: 'Region Name', link: 'pages/region6.html' },
