@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         region12: { name: 'Region Name', link: 'pages/region12.html' },
         region13: { name: 'Region Name', link: 'pages/region13.html' },
         region14: { name: 'Kindush', link: '../pages/kindush.html' },
-        region15: { name: 'Elreach', link: 'pages/elreach.html' },
+        region15: { name: 'Elreach', link: '../pages/elreach.html' },
         region16: { name: 'Mistwelia', link: '../pages/mistwelia.html' },
        
     };
