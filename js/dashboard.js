@@ -164,7 +164,7 @@ postBtn.addEventListener("click", async () => {
         });
 
         // Write to changelog
-        await logChange("update_posted", `New update by ${currentUser.displayName || currentUser.email}`, text.slice(0, 120));
+        await logChange("update_posted", `New update by ${currentUser.displayName || currentUser.email}`, text.slice(0, 120), { postId: docRef.id });
 
         postContent.value = "";
         charCount.textContent = "0 / 1000";
@@ -409,10 +409,21 @@ async function deleteCard(card, id) {
     if (!confirm("Remove this update from the chronicle?")) return;
     try {
         await deleteDoc(doc(db, "updates", id));
+        await cleanChangelogForPost(id);
         allUpdates = allUpdates.filter(u => u.id !== id);
         card.style.opacity = "0"; card.style.transform = "translateY(-6px)"; card.style.transition = "all 0.3s ease";
         setTimeout(() => { renderFeed(); buildCollabList(); buildFilterBar(); loadStats(currentUser.uid); }, 300);
     } catch (err) { console.error("Delete failed:", err); }
+}
+
+// Finds and deletes all changelog entries tied to a specific postId.
+// Runs silently — a cleanup failure should never block the actual deletion.
+async function cleanChangelogForPost(postId) {
+    try {
+        const q = query(collection(db, "changelog"), where("postId", "==", postId));
+        const snap = await getDocs(q);
+        await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "changelog", d.id))));
+    } catch (e) { console.warn("Changelog cleanup failed (non-critical):", e); }
 }
 
 // ── Announcements ─────────────────────────────────────────────
@@ -766,13 +777,14 @@ async function releaseClaim(id) {
 }
 
 // ── Changelog ─────────────────────────────────────────────────
-async function logChange(type, summary, preview) {
+async function logChange(type, summary, preview, extra = {}) {
     try {
         await addDoc(collection(db, "changelog"), {
             type, summary, preview,
             authorUid: currentUser.uid,
             authorName: currentUser.displayName || currentUser.email,
-            createdAt: serverTimestamp()
+            createdAt: serverTimestamp(),
+            ...extra  // spreads in { postId } for update_posted entries so cleanup can find them later
         });
     } catch (e) { /* non-critical, silent fail */ }
 }
