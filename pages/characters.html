@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Characters — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/characters.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html" class="active">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+        </ul>
+    </div>
+
+    <div class="page-transition"></div>
+
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <div class="characters-wrap hidden" id="charactersWrap">
+
+        <!-- Top bar -->
+        <header class="characters-topbar">
+            <div class="characters-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Characters</span>
+            </div>
+            <div class="characters-topbar-right">
+                <button class="topbar-icon-btn" id="charactersSearchBtn" title="Search characters">⌕</button>
+                <a href="dashboard.html" class="back-link">← Dashboard</a>
+            </div>
+        </header>
+
+        <div class="characters-body">
+
+            <!-- LEFT: Sidebar -->
+            <aside class="characters-sidebar">
+
+                <div class="characters-hero">
+                    <div class="characters-hero-eyebrow">— People of —</div>
+                    <div class="characters-hero-title">Characters</div>
+                    <div class="characters-hero-runes" aria-hidden="true">ᚢ 👤 ᚢ 👤 ᚢ</div>
+                    <div class="characters-hero-subtitle">The souls who walk the world of Alithia — heroes, villains, and everyone between.</div>
+                </div>
+
+                <!-- Filter by status -->
+                <nav class="characters-nav">
+                    <div class="characters-nav-label">Filter by Status</div>
+                    <button class="characters-nav-item active" data-status="all">
+                        <span class="characters-nav-icon">✦</span>
+                        <span>All Characters</span>
+                        <span class="characters-nav-count" id="countAll">0</span>
+                    </button>
+                    <button class="characters-nav-item" data-status="alive">
+                        <span class="characters-nav-icon">◈</span>
+                        <span>Alive</span>
+                        <span class="characters-nav-count" id="countAlive">0</span>
+                    </button>
+                    <button class="characters-nav-item" data-status="deceased">
+                        <span class="characters-nav-icon">✝</span>
+                        <span>Deceased</span>
+                        <span class="characters-nav-count" id="countDeceased">0</span>
+                    </button>
+                    <button class="characters-nav-item" data-status="missing">
+                        <span class="characters-nav-icon">?</span>
+                        <span>Missing</span>
+                        <span class="characters-nav-count" id="countMissing">0</span>
+                    </button>
+                    <button class="characters-nav-item" data-status="unknown">
+                        <span class="characters-nav-icon">◇</span>
+                        <span>Unknown</span>
+                        <span class="characters-nav-count" id="countUnknown">0</span>
+                    </button>
+                </nav>
+
+                <!-- Filter by affiliation -->
+                <div class="characters-affil-filter">
+                    <div class="characters-nav-label" style="padding-bottom:0.5rem;margin-bottom:0.5rem;border-bottom:1px solid var(--green-border)">Filter by Affiliation</div>
+                    <div class="affil-chips" id="affilChips">
+                        <button class="affil-chip active" data-affil="all">All</button>
+                        <!-- Populated dynamically from character data -->
+                    </div>
+                </div>
+
+                <button class="characters-add-btn hidden" id="charactersAddBtn">+ Add Character</button>
+
+            </aside>
+
+            <!-- RIGHT: Grid -->
+            <main class="characters-main">
+
+                <div class="characters-main-header">
+                    <span class="characters-main-title" id="charactersMainTitle">All Characters</span>
+                    <span class="characters-entry-count" id="charactersEntryCount">— characters</span>
+                </div>
+
+                <div class="characters-grid" id="charactersGrid">
+                    <div class="characters-loading" id="charactersLoading">
+                        <span class="loading-rune">ᚠ</span>
+                        <span>Summoning the cast of Alithia…</span>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ── Entry viewer modal ── -->
+    <div class="characters-modal-backdrop hidden" id="entryModalBackdrop">
+        <div class="characters-modal" id="entryModal">
+            <button class="characters-modal-close" id="entryModalClose">✕</button>
+
+            <div class="characters-modal-header">
+                <div class="characters-modal-tags" id="modalTags">
+                    <span class="char-tag status-tag" id="modalStatusTag">Status</span>
+                    <span class="char-tag class-tag" id="modalClassTag">Class</span>
+                    <span class="char-tag race-tag" id="modalRaceTag">Race</span>
+                </div>
+                <h2 class="characters-modal-title" id="modalTitle">Character Name</h2>
+                <div class="characters-modal-meta">
+                    <span id="modalWrittenBy">—</span>
+                    <span class="modal-meta-dot">·</span>
+                    <span id="modalUpdated">—</span>
+                </div>
+            </div>
+
+            <div class="characters-modal-divider"><span>👤</span></div>
+
+            <!-- Synopsis -->
+            <div class="characters-modal-desc" id="modalDesc"></div>
+
+            <!-- Key details grid -->
+            <div class="char-details-grid">
+                <div class="char-detail-item">
+                    <div class="char-detail-label">Affiliation</div>
+                    <div class="char-detail-value" id="modalAffiliation">—</div>
+                </div>
+                <div class="char-detail-item">
+                    <div class="char-detail-label">Home Region</div>
+                    <div class="char-detail-value" id="modalRegion">—</div>
+                </div>
+                <div class="char-detail-item">
+                    <div class="char-detail-label">Race / Species</div>
+                    <div class="char-detail-value" id="modalRace">—</div>
+                </div>
+                <div class="char-detail-item">
+                    <div class="char-detail-label">Written By</div>
+                    <div class="char-detail-value" id="modalWrittenByDetail">—</div>
+                </div>
+            </div>
+
+            <!-- Google Doc embed -->
+            <div class="characters-doc-section">
+                <div class="characters-doc-label">
+                    <span class="characters-doc-icon">📋</span>
+                    Full Document
+                </div>
+                <div class="characters-doc-frame" id="modalDocFrame"></div>
+            </div>
+
+            <!-- Keeper actions -->
+            <div class="characters-modal-actions hidden" id="modalKeeperActions">
+                <button class="characters-modal-edit-btn" id="modalEditBtn">✎ Edit Character</button>
+                <button class="characters-modal-delete-btn" id="modalDeleteBtn">✕ Delete Character</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Add / Edit form modal ── -->
+    <div class="characters-modal-backdrop hidden" id="entryFormBackdrop">
+        <div class="characters-modal characters-form-modal" id="entryFormModal">
+            <button class="characters-modal-close" id="entryFormClose">✕</button>
+            <div class="characters-form-title" id="formModalTitle">Add Character</div>
+
+            <div class="characters-form">
+
+                <label class="characters-form-label">Character Name</label>
+                <input type="text" class="characters-form-input" id="formTitle"
+                       placeholder="e.g. Seraph Voss" maxlength="80" />
+
+                <div class="characters-form-row">
+                    <div class="characters-form-col">
+                        <label class="characters-form-label">Status</label>
+                        <select class="characters-form-input characters-form-select" id="formStatus">
+                            <option value="alive">Alive</option>
+                            <option value="deceased">Deceased</option>
+                            <option value="missing">Missing</option>
+                            <option value="unknown">Unknown</option>
+                        </select>
+                    </div>
+                    <div class="characters-form-col">
+                        <label class="characters-form-label">Class / Role</label>
+                        <input type="text" class="characters-form-input" id="formClass"
+                               placeholder="e.g. Rogue, Arcane Knight…" maxlength="60" />
+                    </div>
+                </div>
+
+                <div class="characters-form-row">
+                    <div class="characters-form-col">
+                        <label class="characters-form-label">Race / Species</label>
+                        <input type="text" class="characters-form-input" id="formRace"
+                               placeholder="e.g. Human, Construct…" maxlength="60" />
+                    </div>
+                    <div class="characters-form-col">
+                        <label class="characters-form-label">Home Region</label>
+                        <input type="text" class="characters-form-input" id="formRegion"
+                               placeholder="e.g. Narithrem" maxlength="60" />
+                    </div>
+                </div>
+
+                <div class="characters-form-row">
+                    <div class="characters-form-col">
+                        <label class="characters-form-label">Affiliation</label>
+                        <input type="text" class="characters-form-input" id="formAffiliation"
+                               placeholder="e.g. The Iron Compact" maxlength="80" />
+                    </div>
+                    <div class="characters-form-col">
+                        <label class="characters-form-label">Written By</label>
+                        <input type="text" class="characters-form-input" id="formWrittenBy"
+                               placeholder="Collaborator name" maxlength="60" />
+                    </div>
+                </div>
+
+                <label class="characters-form-label">Synopsis <span class="characters-form-hint">(shown on the card)</span></label>
+                <textarea class="characters-form-input characters-form-textarea" id="formDesc"
+                          placeholder="A brief description of this character — who they are, what drives them…"
+                          maxlength="500" rows="3"></textarea>
+
+                <label class="characters-form-label">
+                    Google Doc URL
+                    <span class="characters-form-hint">(optional — paste shareable link when ready)</span>
+                </label>
+                <input type="url" class="characters-form-input" id="formDocUrl"
+                       placeholder="https://docs.google.com/document/d/…" />
+
+                <div class="characters-form-msg" id="formMsg"></div>
+
+                <div class="characters-form-footer">
+                    <button class="characters-form-submit" id="formSubmitBtn">Save Character</button>
+                    <button class="characters-form-cancel" id="formCancelBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Search overlay ── -->
+    <div class="characters-search-overlay hidden" id="charactersSearchOverlay">
+        <div class="characters-search-inner">
+            <div class="characters-search-bar-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" class="characters-search-input" id="charactersSearchInput"
+                       placeholder="Search names, races, classes, affiliations…" autocomplete="off" />
+                <button class="characters-modal-close characters-search-close" id="charactersSearchClose">✕</button>
+            </div>
+            <div class="characters-search-results" id="charactersSearchResults">
+                <div class="characters-search-hint">Start typing to search characters…</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/characters.js"></script>
+</body>
+</html>

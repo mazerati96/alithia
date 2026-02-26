@@ -1,8 +1,5 @@
 // ============================================================
 //  js/factions.js  —  Alithia Factions
-//  Features: auth guard, type + status filters, faction cards,
-//  entry viewer modal with Google Doc embed, keeper add/edit/
-//  delete, search overlay, changelog logging
 // ============================================================
 
 import { auth, db } from "../auth/firebase-config.js";
