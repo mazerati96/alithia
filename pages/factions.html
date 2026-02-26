@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Factions — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/factions.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html" class="active">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+        </ul>
+    </div>
+
+    <div class="page-transition"></div>
+
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <div class="factions-wrap hidden" id="factionsWrap">
+
+        <!-- Top bar -->
+        <header class="factions-topbar">
+            <div class="factions-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Factions</span>
+            </div>
+            <div class="factions-topbar-right">
+                <button class="topbar-icon-btn" id="factionsSearchBtn" title="Search factions">⌕</button>
+                <a href="dashboard.html" class="back-link">← Dashboard</a>
+            </div>
+        </header>
+
+        <div class="factions-body">
+
+            <!-- LEFT: Sidebar -->
+            <aside class="factions-sidebar">
+
+                <div class="factions-hero">
+                    <div class="factions-hero-eyebrow">— Powers of —</div>
+                    <div class="factions-hero-title">Factions</div>
+                    <div class="factions-hero-runes" aria-hidden="true">⚔ ᚠ ⚔ ᚢ ⚔</div>
+                    <div class="factions-hero-subtitle">The organizations, orders, and powers that shape the fate of Alithia.</div>
+                </div>
+
+                <nav class="factions-nav">
+                    <div class="factions-nav-label">Filter by Type</div>
+                    <button class="factions-nav-item active" data-type="all">
+                        <span class="factions-nav-icon">✦</span>
+                        <span>All Factions</span>
+                        <span class="factions-nav-count" id="countAll">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="military">
+                        <span class="factions-nav-icon">⚔</span>
+                        <span>Military</span>
+                        <span class="factions-nav-count" id="countMilitary">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="political">
+                        <span class="factions-nav-icon">♟</span>
+                        <span>Political</span>
+                        <span class="factions-nav-count" id="countPolitical">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="religious">
+                        <span class="factions-nav-icon">✧</span>
+                        <span>Religious</span>
+                        <span class="factions-nav-count" id="countReligious">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="criminal">
+                        <span class="factions-nav-icon">◈</span>
+                        <span>Criminal</span>
+                        <span class="factions-nav-count" id="countCriminal">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="mercantile">
+                        <span class="factions-nav-icon">◆</span>
+                        <span>Mercantile</span>
+                        <span class="factions-nav-count" id="countMercantile">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="arcane">
+                        <span class="factions-nav-icon">⬡</span>
+                        <span>Arcane</span>
+                        <span class="factions-nav-count" id="countArcane">0</span>
+                    </button>
+                    <button class="factions-nav-item" data-type="other">
+                        <span class="factions-nav-icon">▸</span>
+                        <span>Other</span>
+                        <span class="factions-nav-count" id="countOther">0</span>
+                    </button>
+                </nav>
+
+                <!-- Filter by status -->
+                <div class="factions-status-filter">
+                    <div class="factions-nav-label" style="padding-bottom:0.5rem;margin-bottom:0.4rem;border-bottom:1px solid var(--faction-border)">Filter by Status</div>
+                    <div class="status-chips" id="statusChips">
+                        <button class="status-chip active" data-status="all">All</button>
+                        <button class="status-chip" data-status="active">Active</button>
+                        <button class="status-chip" data-status="secretive">Secretive</button>
+                        <button class="status-chip" data-status="disbanded">Disbanded</button>
+                        <button class="status-chip" data-status="rising">Rising</button>
+                        <button class="status-chip" data-status="declining">Declining</button>
+                    </div>
+                </div>
+
+                <button class="factions-add-btn hidden" id="factionsAddBtn">+ Add Faction</button>
+
+            </aside>
+
+            <!-- RIGHT: Grid -->
+            <main class="factions-main">
+
+                <div class="factions-main-header">
+                    <span class="factions-main-title" id="factionsMainTitle">All Factions</span>
+                    <span class="factions-entry-count" id="factionsEntryCount">— factions</span>
+                </div>
+
+                <div class="factions-grid" id="factionsGrid">
+                    <div class="factions-loading" id="factionsLoading">
+                        <span class="loading-rune">ᚠ</span>
+                        <span>Consulting the records of power…</span>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ── Entry viewer modal ── -->
+    <div class="factions-modal-backdrop hidden" id="entryModalBackdrop">
+        <div class="factions-modal" id="entryModal">
+            <button class="factions-modal-close" id="entryModalClose">✕</button>
+
+            <div class="factions-modal-header">
+                <div class="factions-modal-tags" id="modalTags">
+                    <span class="faction-tag type-tag" id="modalTypeTag">Type</span>
+                    <span class="faction-tag status-tag" id="modalStatusTag">Status</span>
+                    <span class="faction-tag align-tag" id="modalAlignTag">Alignment</span>
+                </div>
+                <h2 class="factions-modal-title" id="modalTitle">Faction Name</h2>
+                <div class="factions-modal-meta">
+                    <span id="modalAuthor">—</span>
+                    <span class="modal-meta-dot">·</span>
+                    <span id="modalUpdated">—</span>
+                </div>
+            </div>
+
+            <div class="factions-modal-divider"><span>⚔</span></div>
+
+            <!-- Synopsis -->
+            <div class="factions-modal-desc" id="modalDesc"></div>
+
+            <!-- Key details grid -->
+            <div class="faction-details-grid" id="modalDetailsGrid">
+                <div class="faction-detail-item" id="detailRegion">
+                    <div class="faction-detail-label">Home Region</div>
+                    <div class="faction-detail-value" id="modalRegion">—</div>
+                </div>
+                <div class="faction-detail-item" id="detailMembers">
+                    <div class="faction-detail-label">Notable Members</div>
+                    <div class="faction-detail-value" id="modalMembers">—</div>
+                </div>
+            </div>
+
+            <!-- Google Doc embed -->
+            <div class="factions-doc-section">
+                <div class="factions-doc-label">
+                    <span class="factions-doc-icon">📋</span>
+                    Full Document
+                </div>
+                <div class="factions-doc-frame" id="modalDocFrame"></div>
+            </div>
+
+            <!-- Keeper actions -->
+            <div class="factions-modal-actions hidden" id="modalKeeperActions">
+                <button class="factions-modal-edit-btn" id="modalEditBtn">✎ Edit Faction</button>
+                <button class="factions-modal-delete-btn" id="modalDeleteBtn">✕ Delete Faction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Add / Edit form modal ── -->
+    <div class="factions-modal-backdrop hidden" id="entryFormBackdrop">
+        <div class="factions-modal factions-form-modal" id="entryFormModal">
+            <button class="factions-modal-close" id="entryFormClose">✕</button>
+            <div class="factions-form-title" id="formModalTitle">Add Faction</div>
+
+            <div class="factions-form">
+
+                <label class="factions-form-label">Faction Name</label>
+                <input type="text" class="factions-form-input" id="formTitle"
+                       placeholder="e.g. The Iron Compact" maxlength="80" />
+
+                <div class="factions-form-row">
+                    <div class="factions-form-col">
+                        <label class="factions-form-label">Type</label>
+                        <select class="factions-form-input factions-form-select" id="formType">
+                            <option value="military">⚔ Military</option>
+                            <option value="political">♟ Political</option>
+                            <option value="religious">✧ Religious</option>
+                            <option value="criminal">◈ Criminal</option>
+                            <option value="mercantile">◆ Mercantile</option>
+                            <option value="arcane">⬡ Arcane</option>
+                            <option value="other">▸ Other</option>
+                        </select>
+                    </div>
+                    <div class="factions-form-col">
+                        <label class="factions-form-label">Status</label>
+                        <select class="factions-form-input factions-form-select" id="formStatus">
+                            <option value="active">Active</option>
+                            <option value="secretive">Secretive</option>
+                            <option value="rising">Rising</option>
+                            <option value="declining">Declining</option>
+                            <option value="disbanded">Disbanded</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="factions-form-row">
+                    <div class="factions-form-col">
+                        <label class="factions-form-label">Alignment</label>
+                        <select class="factions-form-input factions-form-select" id="formAlignment">
+                            <option value="lawful good">Lawful Good</option>
+                            <option value="neutral good">Neutral Good</option>
+                            <option value="chaotic good">Chaotic Good</option>
+                            <option value="lawful neutral">Lawful Neutral</option>
+                            <option value="true neutral">True Neutral</option>
+                            <option value="chaotic neutral">Chaotic Neutral</option>
+                            <option value="lawful evil">Lawful Evil</option>
+                            <option value="neutral evil">Neutral Evil</option>
+                            <option value="chaotic evil">Chaotic Evil</option>
+                            <option value="unknown">Unknown</option>
+                        </select>
+                    </div>
+                    <div class="factions-form-col">
+                        <label class="factions-form-label">Home Region</label>
+                        <input type="text" class="factions-form-input" id="formRegion"
+                               placeholder="e.g. Narithrem" maxlength="60" />
+                    </div>
+                </div>
+
+                <label class="factions-form-label">Notable Members / Leaders</label>
+                <input type="text" class="factions-form-input" id="formMembers"
+                       placeholder="e.g. Commander Varek, High Priestess Orin…" maxlength="200" />
+
+                <label class="factions-form-label">Synopsis <span class="factions-form-hint">(shown on the card)</span></label>
+                <textarea class="factions-form-input factions-form-textarea" id="formDesc"
+                          placeholder="A brief description of this faction, their goals and methods…"
+                          maxlength="500" rows="3"></textarea>
+
+                <label class="factions-form-label">
+                    Google Doc URL
+                    <span class="factions-form-hint">(optional — paste shareable link when ready)</span>
+                </label>
+                <input type="url" class="factions-form-input" id="formDocUrl"
+                       placeholder="https://docs.google.com/document/d/…" />
+
+                <div class="factions-form-msg" id="formMsg"></div>
+
+                <div class="factions-form-footer">
+                    <button class="factions-form-submit" id="formSubmitBtn">Save Faction</button>
+                    <button class="factions-form-cancel" id="formCancelBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Search overlay ── -->
+    <div class="factions-search-overlay hidden" id="factionsSearchOverlay">
+        <div class="factions-search-inner">
+            <div class="factions-search-bar-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" class="factions-search-input" id="factionsSearchInput"
+                       placeholder="Search faction names, types, regions, members…" autocomplete="off" />
+                <button class="factions-modal-close factions-search-close" id="factionsSearchClose">✕</button>
+            </div>
+            <div class="factions-search-results" id="factionsSearchResults">
+                <div class="factions-search-hint">Start typing to search factions…</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/factions.js"></script>
+</body>
+</html>
