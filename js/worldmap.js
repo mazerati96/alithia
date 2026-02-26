@@ -31,11 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
 
     const regionData = {
-        region1: { name: 'Region Name', link: 'pages/region1.html' },
+        region1: { name: 'Qir Uc', link: '../pages/qir-uc.html' },
         region2: { name: 'Region Name', link: 'pages/region2.html' },
         region3: { name: 'Ogith', link: '../pages/ogith.html' },
         region4: { name: 'Region Name', link: 'pages/region4.html' },
-        region5: { name: 'Region Name', link: 'pages/region5.html' },
+        region5: { name: 'Narithrem', link: '../pages/narithrem.html' },
         region6: { name: 'Region Name', link: 'pages/region6.html' },
         region7: { name: 'Khorb', link: '../pages/khorb.html' },
         region8: { name: 'Region Name', link: 'pages/region8.html' },
