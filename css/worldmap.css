@@ -263,9 +263,7 @@ html, body {
     animation-delay: 6.0s;
 }
 
-.region:nth-child(17) .region-hotspot {
-    animation-delay: 6.4s;
-}
+
 
 @keyframes pulseGlow {
     0%, 100% {

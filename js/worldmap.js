@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         region4: { name: 'Region Name', link: 'pages/region4.html' },
         region5: { name: 'Region Name', link: 'pages/region5.html' },
         region6: { name: 'Region Name', link: 'pages/region6.html' },
-        region7: { name: 'Region Name', link: 'pages/region7.html' },
+        region7: { name: 'Khorb', link: '../pages/khorb.html' },
         region8: { name: 'Region Name', link: 'pages/region8.html' },
         region9: { name: 'Region Name', link: 'pages/region9.html' },
         region10: { name: 'Region Name', link: 'pages/region10.html' },
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         region14: { name: 'Region Name', link: 'pages/region14.html' },
         region15: { name: 'Region Name', link: 'pages/region15.html' },
         region16: { name: 'Region Name', link: 'pages/region16.html' },
-        region17: { name: 'Region Name', link: 'pages/region17.html' },
+       
     };
 
     // ============================================
