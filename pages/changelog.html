@@ -46,6 +46,30 @@
                 <span class="topbar-divider">|</span>
                 <span class="topbar-label">World Chronicle</span>
             </div>
+
+            <div class="cl-search-bar" id="clSearchBar">
+                <button class="cl-search-toggle" id="clSearchToggle" aria-label="Search chronicle" title="Search (/)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                </button>
+                <div class="cl-search-input-wrap" id="clSearchInputWrap">
+                    <svg class="cl-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text"
+                           id="clSearchInput"
+                           class="cl-search-input"
+                           placeholder="Search the chronicle…"
+                           autocomplete="off"
+                           spellcheck="false" />
+                    <span class="cl-search-count" id="clSearchCount"></span>
+                    <button class="cl-search-clear" id="clSearchClear" aria-label="Clear search">✕</button>
+                </div>
+            </div>
+
             <div class="cl-topbar-right">
                 <a href="dashboard.html" class="back-link">← Dashboard</a>
             </div>
@@ -64,6 +88,12 @@
                     <span class="loading-rune">ᚠ</span>
                     <span>Loading the chronicle…</span>
                 </div>
+            </div>
+
+            <div class="cl-no-results hidden" id="clNoResults">
+                <div class="no-results-rune">ᚷ</div>
+                <p>No entries match your search.</p>
+                <span>Try different words or clear the search.</span>
             </div>
         </main>
     </div>
