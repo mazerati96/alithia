@@ -220,7 +220,7 @@ html, body {
     }
 
 .notif-dot {
-    display: inline-block;
+    display: inline-block; /* required — span ignores width/height without this */
     width: 8px;
     height: 8px;
     border-radius: 50%;

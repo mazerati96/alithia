@@ -76,13 +76,14 @@ onAuthStateChanged(auth, async (user) => {
         isKeeper = userDoc.data().role === "keeper";
     }
 
-    // Grab lastVisited now so checkNotifications doesn't need its own getDoc,
-    // and so we can guarantee it runs before updateLastVisited overwrites the value.
-    const lastVisited = userDoc.exists() ? userDoc.data()?.lastVisited?.toDate?.() || new Date(0) : new Date(0);
+    // Read lastVisited BEFORE we do anything else so updateLastVisited can't race it.
+    const lastVisited = userDoc.exists()
+        ? (userDoc.data()?.lastVisited?.toDate?.() ?? new Date(0))
+        : new Date(0);
 
     revealDashboard(user);
     await Promise.all([loadAllUpdates(), loadAnnouncements(), loadAllUsers(), loadClaims()]);
-    checkNotifications(lastVisited);   // sync now — no await needed, no race possible
+    checkNotifications(lastVisited); // sync — no race possible
     await loadStats(user.uid);
     await updateLastVisited(user.uid); // awaited so the write is confirmed
 });
@@ -118,11 +119,11 @@ function revealDashboard(user) {
 signOutBtn.addEventListener("click", async () => { await signOut(auth); window.location.href = "login.html"; });
 
 // ── Notifications ─────────────────────────────────────────────
-// lastVisited is passed in directly from the already-fetched user doc in the
-// auth handler — no extra getDoc, no race window with updateLastVisited.
+// lastVisited comes from the auth handler's already-fetched user doc —
+// no extra getDoc, no race window with updateLastVisited.
 function checkNotifications(lastVisited) {
     try {
-        const cutoff = lastVisited || new Date(0);
+        const cutoff = lastVisited ?? new Date(0);
         const hasNew = allUpdates.some(
             u => u.createdAt && u.createdAt.toDate() > cutoff && u.authorUid !== currentUser.uid
         );
@@ -131,7 +132,8 @@ function checkNotifications(lastVisited) {
 }
 
 async function updateLastVisited(uid) {
-    try { await updateDoc(doc(db, "users", uid), { lastVisited: serverTimestamp() }); } catch (e) { /* silent */ }
+    // setDoc with merge creates the field safely even if the user doc is brand-new
+    try { await setDoc(doc(db, "users", uid), { lastVisited: serverTimestamp() }, { merge: true }); } catch (e) { /* silent */ }
 }
 
 // ── Char counter ─────────────────────────────────────────────
