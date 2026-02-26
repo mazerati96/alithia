@@ -13,7 +13,7 @@ const PAGE_SLUG = "ogith";    // ← change this per page (usually same)
 import { auth, db } from "../auth/firebase-config.js";
 import { onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, setDoc, serverTimestamp }
+import { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Particle canvas (shared pattern) ─────────────────────────
@@ -434,6 +434,11 @@ editorSaveBtn.addEventListener("click", async () => {
 
         pageData.sections = sections;
 
+        // Write to changelog (non-blocking)
+        const clType = editingIndex === null ? "lore_section_added" : "lore_section_edited";
+        const clPreview = content.replace(/<[^>]+>/g, "").slice(0, 120);
+        writeChangelog(clType, title, clPreview);
+
         // Update last-edited display
         ogLastEdited.textContent = `Last edited just now`;
         ogLastEdited.classList.remove("hidden");
@@ -487,6 +492,7 @@ deleteConfirmBtn.addEventListener("click", async () => {
     deleteConfirmBtn.textContent = "Deleting…";
 
     const sections = [...pageData.sections];
+    const deletedTitle = pageData.sections[pendingDeleteIndex]?.title || "Untitled Section";
     sections.splice(pendingDeleteIndex, 1);
 
     try {
@@ -496,6 +502,9 @@ deleteConfirmBtn.addEventListener("click", async () => {
             updatedAt: serverTimestamp(),
             updatedBy: currentUser.uid,
         });
+
+        // Write to changelog (non-blocking)
+        writeChangelog("lore_section_deleted", deletedTitle);
 
         pageData.sections = sections;
         hideModal(deleteBackdrop);
@@ -547,4 +556,41 @@ function escHtml(str) {
 
 function slugify(str) {
     return str.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CHANGELOG INTEGRATION
+//  Fires automatically after every section save / delete.
+//  Copy this file with a new PAGE_ID and all 16 other worlds
+//  get changelog entries for free — no changes needed here.
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Writes a single changelog entry to Firestore.
+ * @param {"lore_section_added"|"lore_section_edited"|"lore_section_deleted"} type
+ * @param {string} sectionTitle  — the section's title
+ * @param {string} [preview]     — optional short excerpt
+ */
+async function writeChangelog(type, sectionTitle, preview = "") {
+    const pageLabel = PAGE_ID.charAt(0).toUpperCase() + PAGE_ID.slice(1); // "ogith" → "Ogith"
+
+    const summaryMap = {
+        lore_section_added: `New lore section added to ${pageLabel}: "${sectionTitle}"`,
+        lore_section_edited: `Lore section updated in ${pageLabel}: "${sectionTitle}"`,
+        lore_section_deleted: `Lore section removed from ${pageLabel}: "${sectionTitle}"`,
+    };
+
+    try {
+        await addDoc(collection(db, "changelog"), {
+            type,
+            summary: summaryMap[type] || `Lore change in ${pageLabel}`,
+            preview: preview.slice(0, 120) || "",
+            pageId: PAGE_ID,
+            authorUid: currentUser?.uid || "",
+            createdAt: serverTimestamp(),
+        });
+    } catch (err) {
+        // Changelog write is non-fatal — don't block the UI if it fails
+        console.warn("Changelog write skipped:", err.message);
+    }
 }

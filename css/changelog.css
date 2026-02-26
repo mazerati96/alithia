@@ -830,3 +830,44 @@ mark.cl-highlight {
         display: none;
     }
 }
+
+/* ---- World-page lore entry type accents ---- */
+.cl-entry[data-type="lore_section_added"] .cl-entry-dot::before,
+.cl-entry[data-type="lore_section_edited"] .cl-entry-dot::before {
+    background: #74b9ff;
+    box-shadow: 0 0 6px #74b9ff;
+}
+
+.cl-entry[data-type="lore_section_added"] .cl-entry-type,
+.cl-entry[data-type="lore_section_edited"] .cl-entry-type {
+    color: #74b9ff;
+}
+
+.cl-entry[data-type="lore_section_deleted"] .cl-entry-dot::before {
+    background: rgba(255, 107, 107, 0.6);
+    box-shadow: 0 0 6px rgba(255, 107, 107, 0.4);
+}
+
+.cl-entry[data-type="lore_section_deleted"] .cl-entry-type {
+    color: rgba(255, 107, 107, 0.7);
+}
+
+/* Page name tag — shows which world page was edited */
+.cl-entry-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cl-entry-page-tag {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: rgba(61,255,143,0.3);
+    border: 1px solid rgba(61,255,143,0.15);
+    border-radius: 2px;
+    padding: 0 5px;
+    font-weight: normal;
+    text-transform: none;
+}

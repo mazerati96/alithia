@@ -115,7 +115,9 @@ function buildEntry(docId, data, index) {
             <span class="cl-time-sub">${timeSub}</span>
         </div>
         <div class="cl-entry-content">
-            <div class="cl-entry-type">${escHtml(typeLabel)}</div>
+            <div class="cl-entry-type">
+                ${escHtml(typeLabel)}${data.pageId ? `<span class="cl-entry-page-tag">${escHtml(data.pageId.charAt(0).toUpperCase() + data.pageId.slice(1))}</span>` : ""}
+            </div>
             <div class="cl-entry-summary">${escHtml(data.summary || "")}</div>
             ${data.preview ? `<div class="cl-entry-preview">${escHtml(data.preview)}</div>` : ""}
         </div>
