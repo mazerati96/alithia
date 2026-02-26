@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lore Codex — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/lore-codex.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="lore.html" class="active">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+        </ul>
+    </div>
+
+    <div class="page-transition"></div>
+
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <div class="lore-wrap hidden" id="loreWrap">
+
+        <!-- Top bar -->
+        <header class="lore-topbar">
+            <div class="lore-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Lore Codex</span>
+            </div>
+            <div class="lore-topbar-right">
+                <button class="topbar-icon-btn" id="loreSearchBtn" title="Search the codex">⌕</button>
+                <a href="dashboard.html" class="back-link">← Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Body -->
+        <div class="lore-body">
+
+            <!-- LEFT: Navigation sidebar -->
+            <aside class="lore-sidebar">
+
+                <!-- Page hero, in sidebar -->
+                <div class="lore-hero">
+                    <div class="lore-hero-eyebrow">— The World of —</div>
+                    <div class="lore-hero-title">Lore Codex</div>
+                    <div class="lore-hero-runes" aria-hidden="true">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+                    <div class="lore-hero-subtitle">A living record of Alithia's history, peoples, and mysteries.</div>
+                </div>
+
+                <!-- Category nav -->
+                <nav class="lore-nav">
+                    <div class="lore-nav-label">Browse by Category</div>
+                    <button class="lore-nav-item active" data-cat="all">
+                        <span class="lore-nav-icon">✦</span>
+                        <span>All Entries</span>
+                        <span class="lore-nav-count" id="countAll">0</span>
+                    </button>
+                    <button class="lore-nav-item" data-cat="region">
+                        <span class="lore-nav-icon">🗺</span>
+                        <span>Regions</span>
+                        <span class="lore-nav-count" id="countRegion">0</span>
+                    </button>
+                    <button class="lore-nav-item" data-cat="faction">
+                        <span class="lore-nav-icon">⚔</span>
+                        <span>Factions</span>
+                        <span class="lore-nav-count" id="countFaction">0</span>
+                    </button>
+                    <button class="lore-nav-item" data-cat="character">
+                        <span class="lore-nav-icon">👤</span>
+                        <span>Characters</span>
+                        <span class="lore-nav-count" id="countCharacter">0</span>
+                    </button>
+                    <button class="lore-nav-item" data-cat="history">
+                        <span class="lore-nav-icon">📜</span>
+                        <span>History</span>
+                        <span class="lore-nav-count" id="countHistory">0</span>
+                    </button>
+                    <button class="lore-nav-item" data-cat="magic">
+                        <span class="lore-nav-icon">✧</span>
+                        <span>Magic & Arcana</span>
+                        <span class="lore-nav-count" id="countMagic">0</span>
+                    </button>
+                    <button class="lore-nav-item" data-cat="misc">
+                        <span class="lore-nav-icon">◈</span>
+                        <span>Miscellany</span>
+                        <span class="lore-nav-count" id="countMisc">0</span>
+                    </button>
+                </nav>
+
+                <!-- Add entry button (keepers only, shown via JS) -->
+                <button class="lore-add-btn hidden" id="loreAddBtn">+ Add Lore Entry</button>
+
+            </aside>
+
+            <!-- RIGHT: Entry grid -->
+            <main class="lore-main">
+
+                <div class="lore-main-header">
+                    <span class="lore-main-title" id="loreMainTitle">All Entries</span>
+                    <span class="lore-entry-count" id="loreEntryCount">— entries</span>
+                </div>
+
+                <div class="lore-grid" id="loreGrid">
+                    <div class="lore-loading" id="loreLoading">
+                        <span class="loading-rune">ᚠ</span>
+                        <span>Consulting the ancient records…</span>
+                    </div>
+                </div>
+
+            </main>
+
+        </div>
+    </div>
+
+    <!-- ── Entry viewer modal ─────────────────────────────────── -->
+    <div class="lore-modal-backdrop hidden" id="entryModalBackdrop">
+        <div class="lore-modal" id="entryModal">
+            <button class="lore-modal-close" id="entryModalClose">✕</button>
+
+            <div class="lore-modal-header">
+                <span class="lore-modal-cat-tag" id="modalCatTag">Category</span>
+                <h2 class="lore-modal-title" id="modalTitle">Entry Title</h2>
+                <div class="lore-modal-meta">
+                    <span id="modalAuthor">—</span>
+                    <span class="modal-meta-dot">·</span>
+                    <span id="modalUpdated">—</span>
+                </div>
+            </div>
+
+            <div class="lore-modal-divider"><span>✦</span></div>
+
+            <!-- Description / synopsis -->
+            <div class="lore-modal-desc" id="modalDesc"></div>
+
+            <!-- Google Doc embed placeholder -->
+            <div class="lore-doc-section">
+                <div class="lore-doc-label">
+                    <span class="lore-doc-icon">📋</span>
+                    Full Document
+                </div>
+                <div class="lore-doc-frame" id="modalDocFrame">
+                    <!-- Populated by JS: either an iframe or the placeholder -->
+                </div>
+            </div>
+
+            <!-- Keeper controls inside modal -->
+            <div class="lore-modal-actions hidden" id="modalKeeperActions">
+                <button class="lore-modal-edit-btn" id="modalEditBtn">✎ Edit Entry</button>
+                <button class="lore-modal-delete-btn" id="modalDeleteBtn">✕ Delete Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Add / Edit entry modal ─────────────────────────────── -->
+    <div class="lore-modal-backdrop hidden" id="entryFormBackdrop">
+        <div class="lore-modal lore-form-modal" id="entryFormModal">
+            <button class="lore-modal-close" id="entryFormClose">✕</button>
+            <div class="lore-form-title" id="formModalTitle">Add Lore Entry</div>
+
+            <div class="lore-form">
+                <label class="lore-form-label">Entry Title</label>
+                <input type="text" class="lore-form-input" id="formTitle"
+                       placeholder="e.g. The Ashwood Reach" maxlength="80" />
+
+                <label class="lore-form-label">Category</label>
+                <select class="lore-form-input lore-form-select" id="formCategory">
+                    <option value="region">🗺 Region</option>
+                    <option value="faction">⚔ Faction</option>
+                    <option value="character">👤 Character</option>
+                    <option value="history">📜 History</option>
+                    <option value="magic">✧ Magic & Arcana</option>
+                    <option value="misc">◈ Miscellany</option>
+                </select>
+
+                <label class="lore-form-label">Synopsis <span class="lore-form-hint">(shown on the card)</span></label>
+                <textarea class="lore-form-input lore-form-textarea" id="formDesc"
+                          placeholder="A brief description of this entry…" maxlength="400" rows="3"></textarea>
+
+                <label class="lore-form-label">
+                    Google Doc URL
+                    <span class="lore-form-hint">(optional — paste the shareable link when ready)</span>
+                </label>
+                <input type="url" class="lore-form-input" id="formDocUrl"
+                       placeholder="https://docs.google.com/document/d/…" />
+
+                <div class="lore-form-msg" id="formMsg"></div>
+
+                <div class="lore-form-footer">
+                    <button class="lore-form-submit" id="formSubmitBtn">Save Entry</button>
+                    <button class="lore-form-cancel" id="formCancelBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Search overlay ────────────────────────────────────── -->
+    <div class="lore-search-overlay hidden" id="loreSearchOverlay">
+        <div class="lore-search-inner">
+            <div class="lore-search-bar-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" class="lore-search-input" id="loreSearchInput"
+                       placeholder="Search titles, categories, authors…" autocomplete="off" />
+                <button class="lore-modal-close lore-search-close" id="loreSearchClose">✕</button>
+            </div>
+            <div class="lore-search-results" id="loreSearchResults">
+                <div class="lore-search-hint">Start typing to search the codex…</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/lore-codex.js"></script>
+</body>
+</html>

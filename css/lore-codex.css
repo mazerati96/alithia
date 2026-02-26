@@ -1,0 +1,1242 @@
+/* ============================================================
+   LORE CODEX — ALITHIA
+   ============================================================ */
+
+:root {
+    --green: #3dff8f;
+    --green-dim: #1a7a45;
+    --green-border: rgba(61, 255, 143, 0.2);
+    --green-glow: rgba(61, 255, 143, 0.12);
+    --black: #050a07;
+    --surface: rgba(8, 18, 11, 0.8);
+    --surface-2: rgba(12, 26, 16, 0.9);
+    --font-display: 'Cinzel Decorative', serif;
+    --font-body: 'Cormorant Garamond', serif;
+    --error: #ff6b6b;
+    --topbar-h: 56px;
+    /* Category accent colours */
+    --cat-region: #3dff8f;
+    --cat-faction: #ff9f43;
+    --cat-character: #a29bfe;
+    --cat-history: #ffd32a;
+    --cat-magic: #74b9ff;
+    --cat-misc: #55efc4;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    min-height: 100%;
+    background: var(--black);
+    color: var(--green);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+}
+
+/* ── Background canvas ─────────────────────────────────────── */
+#bg-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.22;
+    pointer-events: none;
+}
+
+.vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 0%, transparent 30%, rgba(5,10,7,0.55) 70%, rgba(5,10,7,0.92) 100%);
+}
+
+/* ── Auth guard ────────────────────────────────────────────── */
+.auth-guard {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease;
+}
+
+    .auth-guard.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.auth-guard-inner {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.guard-rune {
+    font-size: 3rem;
+    color: var(--green-dim);
+    animation: guardSpin 3s linear infinite;
+    text-shadow: 0 0 20px var(--green-dim);
+}
+
+@keyframes guardSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.auth-guard-inner p {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--green-dim);
+    letter-spacing: 0.15em;
+    font-size: 0.9rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ── Page wrap ─────────────────────────────────────────────── */
+.lore-wrap {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    animation: loreIn 0.6s ease forwards;
+}
+
+@keyframes loreIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Topbar ────────────────────────────────────────────────── */
+.lore-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-h);
+    z-index: 80;
+    background: rgba(5,10,7,0.92);
+    border-bottom: 1px solid var(--green-border);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    gap: 1rem;
+}
+
+.lore-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.topbar-home {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-decoration: none;
+    text-shadow: 0 0 12px rgba(61,255,143,0.4);
+    transition: text-shadow 0.3s;
+}
+
+    .topbar-home:hover {
+        text-shadow: 0 0 20px var(--green);
+    }
+
+.topbar-glyph {
+    margin-right: 0.3rem;
+}
+
+.topbar-divider {
+    color: var(--green-border);
+}
+
+.topbar-label {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--green-dim);
+    letter-spacing: 0.1em;
+}
+
+.lore-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-right: 3.5rem;
+}
+
+.topbar-icon-btn {
+    background: none;
+    border: 1px solid var(--green-border);
+    color: var(--green-dim);
+    font-size: 1.1rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+    .topbar-icon-btn:hover {
+        border-color: var(--green);
+        color: var(--green);
+        box-shadow: 0 0 10px rgba(61,255,143,0.2);
+    }
+
+.back-link {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--green-dim);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+    .back-link:hover {
+        color: var(--green);
+    }
+
+/* ── Body layout ───────────────────────────────────────────── */
+.lore-body {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+    padding-top: var(--topbar-h);
+}
+
+/* ── Left sidebar ──────────────────────────────────────────── */
+.lore-sidebar {
+    position: sticky;
+    top: var(--topbar-h);
+    height: calc(100vh - var(--topbar-h));
+    overflow-y: auto;
+    border-right: 1px solid var(--green-border);
+    background: rgba(5,10,7,0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--green-border) transparent;
+}
+
+/* ── Sidebar hero ──────────────────────────────────────────── */
+.lore-hero {
+    padding: 2.5rem 1.5rem 2rem;
+    border-bottom: 1px solid var(--green-border);
+    text-align: center;
+    background: linear-gradient(180deg, rgba(61,255,143,0.04) 0%, transparent 100%);
+}
+
+.lore-hero-eyebrow {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.78rem;
+    color: rgba(61,255,143,0.4);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.5rem;
+}
+
+.lore-hero-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-shadow: 0 0 20px rgba(61,255,143,0.35), 0 0 60px rgba(61,255,143,0.1);
+    margin-bottom: 0.75rem;
+}
+
+.lore-hero-runes {
+    font-size: 0.7rem;
+    letter-spacing: 0.35em;
+    color: rgba(61,255,143,0.2);
+    margin-bottom: 0.9rem;
+}
+
+.lore-hero-subtitle {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: rgba(61,255,143,0.45);
+    letter-spacing: 0.04em;
+}
+
+/* ── Category nav ──────────────────────────────────────────── */
+.lore-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 0.75rem;
+    gap: 0.2rem;
+    flex: 1;
+}
+
+.lore-nav-label {
+    font-family: var(--font-display);
+    font-size: 0.48rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+    padding: 0 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--green-border);
+    margin-bottom: 0.4rem;
+}
+
+.lore-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.75rem;
+    background: none;
+    border: 1px solid transparent;
+    color: rgba(61,255,143,0.55);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    text-align: left;
+    transition: all 0.22s;
+    position: relative;
+}
+
+    .lore-nav-item:hover {
+        color: var(--green);
+        border-color: var(--green-border);
+        background: rgba(61,255,143,0.04);
+    }
+
+    .lore-nav-item.active {
+        color: var(--green);
+        border-color: var(--green-dim);
+        background: rgba(61,255,143,0.07);
+        box-shadow: 0 0 12px rgba(61,255,143,0.08);
+    }
+
+        .lore-nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 2px;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+        }
+
+.lore-nav-icon {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+}
+
+.lore-nav-count {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    color: var(--green-dim);
+    background: rgba(61,255,143,0.06);
+    border: 1px solid var(--green-border);
+    padding: 0.1rem 0.4rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* ── Add entry button ──────────────────────────────────────── */
+.lore-add-btn {
+    margin: 0.75rem;
+    padding: 0.6rem;
+    background: none;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+    .lore-add-btn:hover {
+        background: rgba(61,255,143,0.07);
+        box-shadow: 0 0 14px rgba(61,255,143,0.15);
+    }
+
+/* ── Main content area ─────────────────────────────────────── */
+.lore-main {
+    padding: 2.5rem 2rem 4rem;
+    min-height: calc(100vh - var(--topbar-h));
+}
+
+.lore-main-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid var(--green-border);
+    padding-bottom: 0.9rem;
+}
+
+.lore-main-title {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-shadow: 0 0 16px rgba(61,255,143,0.25);
+}
+
+.lore-entry-count {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: rgba(61,255,143,0.35);
+    margin-left: auto;
+}
+
+/* ── Loading / empty ───────────────────────────────────────── */
+.lore-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 4rem 2rem;
+    color: var(--green-dim);
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+}
+
+.loading-rune {
+    font-size: 1.2rem;
+    animation: runeFlicker 1.5s ease-in-out infinite;
+}
+
+@keyframes runeFlicker {
+    0%, 100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 10px var(--green);
+    }
+}
+
+.lore-empty {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    color: rgba(61,255,143,0.3);
+    padding: 4rem 2rem;
+    border: 1px dashed var(--green-border);
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+}
+
+/* ── Entry grid ────────────────────────────────────────────── */
+.lore-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── Entry card ────────────────────────────────────────────── */
+.lore-card {
+    background: var(--surface);
+    border: 1px solid var(--green-border);
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+    animation: cardIn 0.4s ease forwards;
+    opacity: 0;
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lore-card:hover {
+    border-color: var(--green-dim);
+    box-shadow: 0 0 24px rgba(61,255,143,0.1);
+    transform: translateY(-2px);
+}
+
+/* Category colour strip along top of card */
+.lore-card::before {
+    content: '';
+    display: block;
+    height: 2px;
+    width: 100%;
+}
+
+.lore-card[data-cat="region"]::before {
+    background: var(--cat-region);
+    box-shadow: 0 0 8px var(--cat-region);
+}
+
+.lore-card[data-cat="faction"]::before {
+    background: var(--cat-faction);
+    box-shadow: 0 0 8px var(--cat-faction);
+}
+
+.lore-card[data-cat="character"]::before {
+    background: var(--cat-character);
+    box-shadow: 0 0 8px var(--cat-character);
+}
+
+.lore-card[data-cat="history"]::before {
+    background: var(--cat-history);
+    box-shadow: 0 0 8px var(--cat-history);
+}
+
+.lore-card[data-cat="magic"]::before {
+    background: var(--cat-magic);
+    box-shadow: 0 0 8px var(--cat-magic);
+}
+
+.lore-card[data-cat="misc"]::before {
+    background: var(--cat-misc);
+    box-shadow: 0 0 8px var(--cat-misc);
+}
+
+.lore-card-inner {
+    padding: 1.1rem 1.15rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    flex: 1;
+}
+
+.lore-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.lore-card-cat {
+    font-family: var(--font-display);
+    font-size: 0.42rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid transparent;
+}
+
+.lore-card[data-cat="region"] .lore-card-cat {
+    color: var(--cat-region);
+    border-color: rgba(61,255,143,0.25);
+}
+
+.lore-card[data-cat="faction"] .lore-card-cat {
+    color: var(--cat-faction);
+    border-color: rgba(255,159,67,0.25);
+}
+
+.lore-card[data-cat="character"] .lore-card-cat {
+    color: var(--cat-character);
+    border-color: rgba(162,155,254,0.25);
+}
+
+.lore-card[data-cat="history"] .lore-card-cat {
+    color: var(--cat-history);
+    border-color: rgba(255,211,42,0.25);
+}
+
+.lore-card[data-cat="magic"] .lore-card-cat {
+    color: var(--cat-magic);
+    border-color: rgba(116,185,255,0.25);
+}
+
+.lore-card[data-cat="misc"] .lore-card-cat {
+    color: var(--cat-misc);
+    border-color: rgba(85,239,196,0.25);
+}
+
+.lore-card-doc-badge {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.65rem;
+    color: rgba(61,255,143,0.35);
+    letter-spacing: 0.04em;
+}
+
+.lore-card-title {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    line-height: 1.5;
+}
+
+.lore-card-desc {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgba(61,255,143,0.65);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.lore-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--green-border);
+    padding-top: 0.65rem;
+    margin-top: auto;
+}
+
+.lore-card-author {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(61,255,143,0.35);
+}
+
+.lore-card-arrow {
+    font-size: 0.85rem;
+    color: var(--green-dim);
+    transition: transform 0.2s, color 0.2s;
+}
+
+.lore-card:hover .lore-card-arrow {
+    transform: translateX(3px);
+    color: var(--green);
+}
+
+/* ── Entry viewer modal ────────────────────────────────────── */
+.lore-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(5,10,7,0.88);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: calc(var(--topbar-h) + 1.5rem) 1.5rem 2rem;
+    overflow-y: auto;
+    animation: backdropIn 0.2s ease forwards;
+}
+
+    .lore-modal-backdrop.hidden {
+        display: none !important;
+    }
+
+@keyframes backdropIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.lore-modal {
+    width: 100%;
+    max-width: 740px;
+    background: var(--surface-2);
+    border: 1px solid rgba(61,255,143,0.3);
+    padding: 2.5rem 2.25rem 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: 0 0 60px rgba(61,255,143,0.08);
+    animation: modalIn 0.25s ease forwards;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lore-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    color: var(--green-dim);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+    .lore-modal-close:hover {
+        color: var(--green);
+    }
+
+.lore-modal-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.lore-modal-cat-tag {
+    font-family: var(--font-display);
+    font-size: 0.48rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    align-self: flex-start;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--green-border);
+    color: var(--green-dim);
+}
+
+.lore-modal-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    font-weight: 400;
+    text-shadow: 0 0 20px rgba(61,255,143,0.3);
+    line-height: 1.4;
+}
+
+.lore-modal-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.78rem;
+    color: rgba(61,255,143,0.35);
+}
+
+.modal-meta-dot {
+    color: var(--green-border);
+}
+
+.lore-modal-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+    .lore-modal-divider::before,
+    .lore-modal-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--green-border);
+    }
+
+    .lore-modal-divider span {
+        color: var(--green-dim);
+        font-size: 0.65rem;
+    }
+
+.lore-modal-desc {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.75;
+    color: rgba(61,255,143,0.75);
+    letter-spacing: 0.02em;
+    font-style: italic;
+    min-height: 1.5rem;
+}
+
+/* ── Google Doc section ────────────────────────────────────── */
+.lore-doc-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.lore-doc-label {
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.lore-doc-icon {
+    font-size: 0.75rem;
+}
+
+/* Live iframe (when a doc URL is provided) */
+.lore-doc-iframe {
+    width: 100%;
+    height: 600px;
+    border: 1px solid var(--green-border);
+    background: rgba(61,255,143,0.02);
+}
+
+/* Placeholder (when no doc URL yet) */
+.lore-doc-placeholder {
+    border: 1px dashed rgba(61,255,143,0.2);
+    background: rgba(61,255,143,0.02);
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.lore-doc-placeholder-rune {
+    font-size: 2.5rem;
+    color: rgba(61,255,143,0.15);
+    line-height: 1;
+}
+
+.lore-doc-placeholder-title {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+}
+
+.lore-doc-placeholder-body {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: rgba(61,255,143,0.35);
+    max-width: 380px;
+}
+
+    .lore-doc-placeholder-body code {
+        font-family: monospace;
+        font-style: normal;
+        font-size: 0.78rem;
+        color: var(--green-dim);
+        background: rgba(61,255,143,0.06);
+        padding: 0.1rem 0.4rem;
+        letter-spacing: 0.04em;
+    }
+
+/* ── Modal keeper actions ──────────────────────────────────── */
+.lore-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    border-top: 1px solid var(--green-border);
+    padding-top: 1rem;
+}
+
+.lore-modal-edit-btn {
+    background: none;
+    border: 1px solid var(--green-border);
+    color: var(--green-dim);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    transition: all 0.22s;
+}
+
+    .lore-modal-edit-btn:hover {
+        border-color: var(--green);
+        color: var(--green);
+    }
+
+.lore-modal-delete-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: rgba(255,107,107,0.5);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    transition: all 0.22s;
+}
+
+    .lore-modal-delete-btn:hover {
+        color: #ff6b6b;
+        border-color: rgba(255,107,107,0.3);
+    }
+
+/* ── Add / Edit form modal ─────────────────────────────────── */
+.lore-form-modal {
+    max-width: 560px;
+}
+
+.lore-form-title {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 0.25rem;
+}
+
+.lore-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.lore-form-label {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+    margin-top: 0.4rem;
+}
+
+.lore-form-hint {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(61,255,143,0.3);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.lore-form-input {
+    width: 100%;
+    background: rgba(61,255,143,0.04);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.6rem 0.85rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+    .lore-form-input::placeholder {
+        color: rgba(61,255,143,0.2);
+        font-style: italic;
+    }
+
+    .lore-form-input:focus {
+        border-color: rgba(61,255,143,0.5);
+    }
+
+.lore-form-select {
+    cursor: pointer;
+}
+
+.lore-form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.lore-form-msg {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    min-height: 1em;
+}
+
+    .lore-form-msg.error {
+        color: var(--error);
+    }
+
+    .lore-form-msg.success {
+        color: var(--green);
+    }
+
+.lore-form-footer {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.lore-form-submit {
+    flex: 1;
+    padding: 0.65rem 1.2rem;
+    background: rgba(61,255,143,0.06);
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+    .lore-form-submit:hover {
+        background: rgba(61,255,143,0.12);
+        box-shadow: 0 0 14px rgba(61,255,143,0.15);
+    }
+
+    .lore-form-submit:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+.lore-form-cancel {
+    padding: 0.65rem 1rem;
+    background: none;
+    border: 1px solid transparent;
+    color: rgba(61,255,143,0.4);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color 0.22s;
+}
+
+    .lore-form-cancel:hover {
+        color: var(--green-dim);
+    }
+
+/* ── Search overlay ────────────────────────────────────────── */
+.lore-search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 260;
+    background: rgba(5,10,7,0.92);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 5rem 1.5rem 2rem;
+    animation: backdropIn 0.2s ease forwards;
+}
+
+    .lore-search-overlay.hidden {
+        display: none !important;
+    }
+
+.lore-search-inner {
+    width: 100%;
+    max-width: 620px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.lore-search-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid rgba(61,255,143,0.4);
+    background: var(--surface-2);
+    padding: 0.7rem 1rem;
+}
+
+.search-icon {
+    font-size: 1.1rem;
+    color: var(--green-dim);
+    flex-shrink: 0;
+}
+
+.lore-search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--green);
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    outline: none;
+    letter-spacing: 0.04em;
+}
+
+    .lore-search-input::placeholder {
+        color: rgba(61,255,143,0.25);
+        font-style: italic;
+    }
+
+.lore-search-close {
+    position: static;
+    flex-shrink: 0;
+}
+
+.lore-search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.lore-search-hint, .lore-search-no-results {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: rgba(61,255,143,0.3);
+    text-align: center;
+    padding: 2rem 0;
+    font-size: 0.9rem;
+}
+
+.lore-search-result {
+    background: var(--surface);
+    border: 1px solid var(--green-border);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.22s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+    .lore-search-result:hover {
+        border-color: rgba(61,255,143,0.4);
+    }
+
+.lore-search-result-cat {
+    font-family: var(--font-display);
+    font-size: 0.45rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+}
+
+.lore-search-result-title {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: rgba(61,255,143,0.85);
+}
+
+.lore-search-result-desc {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.75rem;
+    color: rgba(61,255,143,0.35);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.search-highlight {
+    color: var(--green);
+    font-style: normal;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .lore-body {
+        grid-template-columns: 1fr;
+    }
+
+    .lore-sidebar {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--green-border);
+    }
+
+    .lore-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding: 1rem;
+    }
+
+    .lore-nav-label {
+        width: 100%;
+    }
+
+    .lore-nav-item {
+        padding: 0.4rem 0.75rem;
+    }
+
+    .lore-nav-count {
+        display: none;
+    }
+
+    .lore-nav-item.active::before {
+        display: none;
+    }
+
+    .lore-nav-item.active {
+        border-bottom: 2px solid var(--green);
+    }
+
+    .lore-hero {
+        padding: 1.5rem 1.5rem 1.25rem;
+    }
+
+    .lore-hero-title {
+        font-size: 0.85rem;
+    }
+
+    .lore-add-btn {
+        margin: 0.5rem 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .lore-main {
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .lore-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lore-modal {
+        padding: 2rem 1.25rem 1.5rem;
+    }
+
+    .lore-modal-title {
+        font-size: 0.85rem;
+    }
+
+    .lore-topbar {
+        padding: 0 1rem;
+    }
+
+    .topbar-label {
+        display: none;
+    }
+
+    .lore-topbar-right {
+        margin-right: 3rem;
+    }
+}
