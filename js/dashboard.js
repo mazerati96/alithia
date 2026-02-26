@@ -192,6 +192,7 @@ async function loadAllUpdates() {
         feedLoading.style.display = "none";
         buildFilterBar();
         buildCategoryBar();
+        renderPinnedSection();
         renderFeed();
     } catch (err) {
         feedLoading.style.display = "none";
@@ -203,7 +204,7 @@ async function loadAllUpdates() {
 function renderFeed() {
     feedList.querySelectorAll(".update-card,.feed-empty").forEach(e => e.remove());
 
-    let visible = allUpdates;
+    let visible = allUpdates.filter(u => !u.pinned);
     if (activeFilter !== "all") visible = visible.filter(u => u.authorUid === activeFilter);
     if (activeCat !== "all") visible = visible.filter(u => (u.category || "misc") === activeCat);
 
@@ -252,19 +253,21 @@ function buildCategoryBar() {
 }
 
 // ── Build update card ─────────────────────────────────────────
-function buildCard(data) {
+function buildCard(data, inPinnedSection = false) {
     const id = data.id;
     const isOwn = currentUser && data.authorUid === currentUser.uid;
     const canDelete = isOwn || isKeeper;
+    const isPinned = !!data.pinned;
     const cat = data.category || "misc";
     const catLabels = { lore: "📜 Lore", character: "👤 Character", map: "🗺 Map", mechanics: "⚙ Mechanics", misc: "✦ Misc" };
 
     const card = document.createElement("div");
-    card.className = "update-card";
+    card.className = "update-card" + (isPinned ? " pinned-card" : "");
     card.dataset.id = id;
 
     const timeStr = data.createdAt ? formatTime(data.createdAt.toDate()) : "just now";
     const editedTag = data.edited ? '<span class="card-edited-tag">(edited)</span>' : "";
+    const pinBadge = isPinned && !inPinnedSection ? '<span class="card-pin-badge">📌</span>' : "";
 
     card.innerHTML = `
         <div class="card-meta">
@@ -272,28 +275,70 @@ function buildCard(data) {
             <span class="card-author">${escHtml(data.authorName)}</span>
             <span class="card-category-tag">${catLabels[cat] || cat}</span>
             ${editedTag}
+            ${pinBadge}
             <span class="card-time">${timeStr}</span>
         </div>
         <div class="card-body" data-display>${escHtml(data.content)}</div>
         <div class="card-reactions" data-reactions></div>
-        ${canDelete ? `<div class="card-actions" data-actions>
+        ${(canDelete || isKeeper) ? `<div class="card-actions" data-actions>
             ${isOwn ? `<button class="card-action-btn edit-btn">Edit</button>` : ""}
-            <button class="card-action-btn delete-btn${!isOwn && isKeeper ? " keeper-delete-btn" : ""}">
+            ${isKeeper ? `<button class="card-action-btn pin-btn${isPinned ? " pinned" : ""}" data-pinned="${isPinned}">
+                ${isPinned ? "📌 Unpin" : "📌 Pin"}
+            </button>` : ""}
+            ${canDelete ? `<button class="card-action-btn delete-btn${!isOwn && isKeeper ? " keeper-delete-btn" : ""}">
                 ${!isOwn && isKeeper ? "✦ Remove" : "Delete"}
-            </button>
+            </button>` : ""}
         </div>` : ""}
     `;
 
     buildReactions(card, data);
 
     if (isOwn) {
-        card.querySelector(".edit-btn").addEventListener("click", () => enterEditMode(card, data));
+        card.querySelector(".edit-btn")?.addEventListener("click", () => enterEditMode(card, data));
+    }
+    if (isKeeper) {
+        card.querySelector(".pin-btn")?.addEventListener("click", () => togglePin(data));
     }
     if (canDelete) {
-        card.querySelector(".delete-btn").addEventListener("click", () => deleteCard(card, id));
+        card.querySelector(".delete-btn")?.addEventListener("click", () => deleteCard(card, id));
     }
 
     return card;
+}
+
+// ── Pin / Unpin ───────────────────────────────────────────────
+async function togglePin(data) {
+    if (!isKeeper) return;
+    const newPinned = !data.pinned;
+    try {
+        await updateDoc(doc(db, "updates", data.id), { pinned: newPinned });
+        // Update cache
+        const idx = allUpdates.findIndex(u => u.id === data.id);
+        if (idx !== -1) allUpdates[idx].pinned = newPinned;
+        renderPinnedSection();
+        renderFeed();
+    } catch (err) {
+        console.error("Pin toggle failed:", err);
+    }
+}
+
+// ── Pinned section ────────────────────────────────────────────
+function renderPinnedSection() {
+    const section = document.getElementById("pinnedSection");
+    const list = document.getElementById("pinnedList");
+    const countEl = document.getElementById("pinnedCount");
+    const pinned = allUpdates.filter(u => u.pinned);
+
+    list.innerHTML = "";
+
+    if (pinned.length === 0) {
+        section.classList.add("hidden");
+        return;
+    }
+
+    section.classList.remove("hidden");
+    countEl.textContent = pinned.length;
+    pinned.forEach(data => list.appendChild(buildCard(data, true)));
 }
 
 // ── Reactions ─────────────────────────────────────────────────
@@ -888,6 +933,7 @@ function jumpToPost(id, authorUid) {
         activeCat = "all";
         buildFilterBar();
         buildCategoryBar();
+        renderPinnedSection();
         renderFeed();
     }
 

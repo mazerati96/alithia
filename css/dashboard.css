@@ -1765,3 +1765,80 @@ html, body {
         grid-column: span 1;
     }
 }
+
+/* ── Pinned section ──────────────────────────────────────────── */
+.pinned-section {
+    margin-bottom: 1.25rem;
+    border: 1px solid rgba(61, 255, 143, 0.35);
+    background: rgba(61, 255, 143, 0.03);
+}
+
+.pinned-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid rgba(61, 255, 143, 0.15);
+    background: rgba(61, 255, 143, 0.05);
+}
+
+.pinned-icon {
+    font-size: 0.85rem;
+}
+
+.pinned-title {
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green-dim);
+}
+
+.pinned-count {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: 0.48rem;
+    letter-spacing: 0.1em;
+    color: var(--green-dim);
+    background: rgba(61, 255, 143, 0.07);
+    border: 1px solid rgba(61, 255, 143, 0.2);
+    padding: 0.1rem 0.45rem;
+    min-width: 22px;
+    text-align: center;
+}
+
+/* Pinned card inside the pinned section */
+.pinned-section .update-card {
+    border: none;
+    border-bottom: 1px solid rgba(61, 255, 143, 0.1);
+    margin: 0;
+}
+
+    .pinned-section .update-card:last-child {
+        border-bottom: none;
+    }
+
+/* Pin button in card actions */
+.pin-btn {
+    color: rgba(61, 255, 143, 0.45);
+    border-color: rgba(61, 255, 143, 0.2) !important;
+    font-size: 0.75rem;
+}
+
+    .pin-btn:hover {
+        color: var(--green) !important;
+        border-color: var(--green) !important;
+    }
+
+    .pin-btn.pinned {
+        color: var(--green) !important;
+        border-color: var(--green) !important;
+        background: rgba(61, 255, 143, 0.07) !important;
+    }
+
+/* Pin badge on cards in the main feed */
+.card-pin-badge {
+    font-size: 0.72rem;
+    opacity: 0.6;
+    margin-left: 0.1rem;
+}
