@@ -98,6 +98,24 @@
         </main>
     </div>
 
+    <!-- Delete confirmation modal -->
+    <div class="cl-modal hidden" id="clDeleteModal" role="dialog" aria-modal="true" aria-labelledby="clDeleteTitle">
+        <div class="cl-modal-box">
+            <div class="cl-modal-rune">ᚦ</div>
+            <h2 class="cl-modal-title" id="clDeleteTitle">Erase from the Chronicle?</h2>
+            <p class="cl-modal-body">This entry will be permanently removed from the record:</p>
+            <div class="cl-modal-entry-preview">
+                <span id="clDeleteSummary"></span>
+            </div>
+            <p class="cl-modal-warning">This cannot be undone.</p>
+            <div class="cl-modal-error hidden" id="clDeleteError"></div>
+            <div class="cl-modal-actions">
+                <button class="cl-modal-btn cl-modal-cancel" id="clDeleteCancel">Keep It</button>
+                <button class="cl-modal-btn cl-modal-confirm" id="clDeleteConfirm">Erase Entry</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/navigation.js"></script>
     <script type="module" src="../js/changelog.js"></script>
 </body>
