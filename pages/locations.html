@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Locations — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/locations.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="locations.html" class="active">LOCATIONS</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+        </ul>
+    </div>
+
+    <div class="page-transition"></div>
+
+    <!-- Auth guard -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <div class="loc-wrap hidden" id="locWrap">
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- HERO                                         -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section class="loc-hero">
+            <div class="hero-grid-overlay"></div>
+            <div class="hero-content">
+                <div class="hero-eyebrow">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text">THE WORLD OF ALITHIA</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+                <h1 class="hero-title">Locations</h1>
+                <div class="hero-eyebrow hero-eyebrow-lower">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text">LANDS, REGIONS & PLACES OF LEGEND</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+                <div class="hero-runes" aria-hidden="true">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+            </div>
+            <div class="hero-scroll-hint">
+                <span>SCROLL</span>
+                <div class="scroll-arrow"></div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- BODY                                         -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="loc-body">
+
+            <!-- Meta bar -->
+            <div class="loc-meta-bar">
+                <nav class="loc-breadcrumb">
+                    <a href="worldmap.html">World Map</a>
+                    <span class="bc-sep">›</span>
+                    <span class="bc-current">Locations</span>
+                </nav>
+                <div class="loc-meta-right">
+                    <span class="loc-last-edited hidden" id="locLastEdited"></span>
+                    <button class="loc-edit-toggle hidden" id="locEditToggle">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                        Edit Blurb
+                    </button>
+                </div>
+            </div>
+
+            <!-- Edit mode banner -->
+            <div class="loc-edit-banner hidden" id="locEditBanner">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                <span>You are in <strong>edit mode</strong>. Edit the intro blurb below.</span>
+                <button class="edit-banner-exit" id="editBannerExit">Exit Edit Mode</button>
+            </div>
+
+            <!-- ─── INTRO BLURB ─────────────────────────── -->
+            <div class="loc-intro" id="locIntro">
+                <div class="loc-intro-loading" id="locIntroLoading">
+                    <span class="loading-rune">ᚠ</span>
+                    <span>Consulting the ancient records…</span>
+                </div>
+                <!-- Content rendered here by JS -->
+            </div>
+
+            <!-- Keeper blurb editor (hidden until edit mode) -->
+            <div class="loc-editor hidden" id="locEditor">
+                <div class="rte-toolbar" id="rteToolbar">
+                    <div class="rte-toolbar-group">
+                        <button class="rte-btn" data-cmd="bold"><strong>B</strong></button>
+                        <button class="rte-btn" data-cmd="italic"><em>I</em></button>
+                        <button class="rte-btn" data-cmd="underline"><u>U</u></button>
+                    </div>
+                    <div class="rte-toolbar-sep"></div>
+                    <div class="rte-toolbar-group">
+                        <button class="rte-btn" data-cmd="formatBlock" data-val="h2">H2</button>
+                        <button class="rte-btn" data-cmd="formatBlock" data-val="h3">H3</button>
+                        <button class="rte-btn" data-cmd="formatBlock" data-val="p">¶</button>
+                    </div>
+                    <div class="rte-toolbar-sep"></div>
+                    <div class="rte-toolbar-group">
+                        <button class="rte-btn" data-cmd="insertUnorderedList">• List</button>
+                        <button class="rte-btn" data-cmd="formatBlock" data-val="blockquote">❝</button>
+                    </div>
+                </div>
+                <div class="rte-body" id="rteBody" contenteditable="true"
+                     data-placeholder="Write an overview of Alithia's lands and regions…"></div>
+                <div class="loc-editor-footer">
+                    <span class="loc-editor-msg" id="locEditorMsg"></span>
+                    <div class="loc-editor-actions">
+                        <button class="loc-save-btn" id="locSaveBtn">Save Blurb</button>
+                        <button class="loc-cancel-btn" id="locCancelBtn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── REGION GRID ──────────────────────────── -->
+            <div class="loc-regions-section">
+                <div class="loc-section-header">
+                    <span class="eyebrow-line"></span>
+                    <span class="loc-section-label">Explore the Regions</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+
+                <div class="loc-region-grid" id="locRegionGrid">
+
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+                    <a href="#" class="loc-region-btn">
+                        <span class="region-btn-glow"></span>
+                        <span class="region-btn-label">Region Name</span>
+                        <span class="region-btn-arrow">→</span>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Footer nav -->
+            <div class="loc-footer-nav">
+                <a href="worldmap.html" class="loc-footer-link">← World Map</a>
+                <a href="lore-codex.html" class="loc-footer-link">Lore Codex →</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/locations.js"></script>
+</body>
+</html>
