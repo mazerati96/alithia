@@ -174,7 +174,9 @@ loginForm.addEventListener("submit", async (e) => {
 
         setMessage("loginMessage", welcomeMsg, "success");
         setTimeout(() => {
-            window.location.href = "dashboard.html";
+            const redirect = sessionStorage.getItem("alithia_redirect");
+            sessionStorage.removeItem("alithia_redirect");
+            window.location.href = redirect || "dashboard.html";
         }, 1200);
     } catch (err) {
         setMessage("loginMessage", friendlyError(err.code), "error");
@@ -248,7 +250,9 @@ registerForm.addEventListener("submit", async (e) => {
 
         setMessage("registerMessage", `Welcome, ${username}. The gates of Alithia open for you…`, "success");
         setTimeout(() => {
-            window.location.href = "dashboard.html";
+            const redirect = sessionStorage.getItem("alithia_redirect");
+            sessionStorage.removeItem("alithia_redirect");
+            window.location.href = redirect || "dashboard.html";
         }, 1500);
 
     } catch (err) {

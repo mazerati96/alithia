@@ -40,7 +40,11 @@ let currentUser = null;
 let isKeeper = false;
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = "login.html"; return; }
+    if (!user) {
+        sessionStorage.setItem("alithia_redirect", window.location.href);
+        window.location.href = "login.html";
+        return;
+    }
 
     currentUser = user;
 
