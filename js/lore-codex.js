@@ -106,7 +106,7 @@ async function loadEntries() {
 
 // ── Count badges ─────────────────────────────────────────────
 function updateCounts() {
-    const counts = { region: 0, faction: 0, character: 0, history: 0, magic: 0, misc: 0 };
+    const counts = { region: 0, faction: 0, character: 0, history: 0, magic: 0, misc: 0, vel: 0 };
     allEntries.forEach(e => { if (counts[e.category] !== undefined) counts[e.category]++; });
 
     document.getElementById("countAll").textContent = allEntries.length;
@@ -116,6 +116,7 @@ function updateCounts() {
     document.getElementById("countHistory").textContent = counts.history;
     document.getElementById("countMagic").textContent = counts.magic;
     document.getElementById("countMisc").textContent = counts.misc;
+    document.getElementById("countVel").textContent = counts.vel;
 }
 
 // ── Render grid ───────────────────────────────────────────────
