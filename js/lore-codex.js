@@ -56,6 +56,7 @@ const CAT_LABELS = {
     history: "📜 History",
     magic: "✧ Magic & Arcana",
     misc: "◈ Miscellany",
+    vel: "* Vel",
 };
 
 // ── DOM refs ─────────────────────────────────────────────────
