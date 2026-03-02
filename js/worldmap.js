@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         region8: { name: 'Pearldia', link: '../pages/pearldia.html' },
         region9: { name: 'Heartle', link: '../pages/heartle.html' },
         region10: { name: 'Wruil', link: '../pages/wruil.html' },
-        region11: { name: 'Region Name', link: 'pages/region11.html' },
+        region11: { name: 'Sivrekbeli', link: '../pages/sivrekbeli.html' },
         region12: { name: 'Ulm', link: '../pages/ulm.html' },
         region13: { name: 'Unnamed Islands', link: '../pages/unnamed-islands.html' },
         region14: { name: 'Kindush', link: '../pages/kindush.html' },
