@@ -1,5 +1,5 @@
 // ============================================================
-//  js/characters.js  —  Alithia Characters
+//  js/characters.js  —  Alithia Characters (with Lore sync)
 // ============================================================
 
 import { auth, db } from "../auth/firebase-config.js";
@@ -7,7 +7,7 @@ import { onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
     collection, addDoc, getDocs, getDoc, doc, deleteDoc,
-    updateDoc, query, orderBy, serverTimestamp
+    updateDoc, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Particle canvas ──────────────────────────────────────────
@@ -106,7 +106,6 @@ function updateCounts() {
         if (counts[s] !== undefined) counts[s]++;
         else counts.unknown++;
     });
-
     document.getElementById("countAll").textContent = allCharacters.length;
     document.getElementById("countAlive").textContent = counts.alive;
     document.getElementById("countDeceased").textContent = counts.deceased;
@@ -114,15 +113,12 @@ function updateCounts() {
     document.getElementById("countUnknown").textContent = counts.unknown;
 }
 
-// ── Affiliation chips (built from data) ───────────────────────
+// ── Affiliation chips ─────────────────────────────────────────
 function buildAffilChips() {
     const container = document.getElementById("affilChips");
-
-    // Collect unique affiliations
     const affils = new Set();
-    allCharacters.forEach(c => { if (c.affiliation && c.affiliation.trim()) affils.add(c.affiliation.trim()); });
+    allCharacters.forEach(c => { if (c.affiliation?.trim()) affils.add(c.affiliation.trim()); });
 
-    // Keep "All" chip, remove the rest, rebuild
     container.querySelectorAll(".affil-chip:not([data-affil='all'])").forEach(c => c.remove());
 
     affils.forEach(affil => {
@@ -185,7 +181,7 @@ function buildCard(character, index) {
     const race = character.race || "";
     const affiliation = character.affiliation || "";
     const region = character.region || "";
-    const hasDoc = !!(character.docUrl && character.docUrl.trim());
+    const hasDoc = !!(character.docUrl?.trim());
 
     card.innerHTML = `
         <div class="character-card-inner">
@@ -227,26 +223,17 @@ function openEntryModal(character) {
     const backdrop = document.getElementById("entryModalBackdrop");
     const status = character.status || "unknown";
 
-    // Tags
     const statusEl = document.getElementById("modalStatusTag");
     statusEl.textContent = capitalize(status);
     statusEl.dataset.status = status;
 
     const classEl = document.getElementById("modalClassTag");
-    if (character.charClass) {
-        classEl.textContent = character.charClass;
-        classEl.style.display = "";
-    } else {
-        classEl.style.display = "none";
-    }
+    if (character.charClass) { classEl.textContent = character.charClass; classEl.style.display = ""; }
+    else { classEl.style.display = "none"; }
 
     const raceEl = document.getElementById("modalRaceTag");
-    if (character.race) {
-        raceEl.textContent = character.race;
-        raceEl.style.display = "";
-    } else {
-        raceEl.style.display = "none";
-    }
+    if (character.race) { raceEl.textContent = character.race; raceEl.style.display = ""; }
+    else { raceEl.style.display = "none"; }
 
     document.getElementById("modalTitle").textContent = character.title || "Unnamed Character";
     document.getElementById("modalWrittenBy").textContent = `by ${character.writtenBy || character.authorName || "Unknown"}`;
@@ -259,10 +246,9 @@ function openEntryModal(character) {
     document.getElementById("modalRace").textContent = character.race || "Unknown";
     document.getElementById("modalWrittenByDetail").textContent = character.writtenBy || character.authorName || "Unknown";
 
-    // Google Doc link button or placeholder
     const frameEl = document.getElementById("modalDocFrame");
     frameEl.innerHTML = "";
-    if (character.docUrl && character.docUrl.trim()) {
+    if (character.docUrl?.trim()) {
         frameEl.innerHTML = `
             <div class="characters-doc-linked">
                 <div class="characters-doc-linked-info">
@@ -274,12 +260,10 @@ function openEntryModal(character) {
                 </div>
                 <a class="characters-doc-open-btn"
                    href="${escHtml(character.docUrl.trim())}"
-                   target="_blank"
-                   rel="noopener noreferrer">
+                   target="_blank" rel="noopener noreferrer">
                     Open in Google Docs →
                 </a>
-            </div>
-        `;
+            </div>`;
     } else {
         frameEl.innerHTML = `
             <div class="characters-doc-placeholder">
@@ -290,11 +274,9 @@ function openEntryModal(character) {
                     When a Google Doc is ready, anyone can attach it via
                     <code>Edit Character → Google Doc URL</code> and it will appear here automatically.
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    // Keeper actions
     const keeperActions = document.getElementById("modalKeeperActions");
     if (isKeeper) {
         keeperActions.classList.remove("hidden");
@@ -378,31 +360,52 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
 
     try {
         if (editingId) {
+            // ── EDIT ──────────────────────────────────────────
             await updateDoc(doc(db, "characters", editingId), {
-                title, status, charClass, race, region, affiliation, writtenBy, synopsis, docUrl,
+                title, status, charClass, race, region, affiliation,
+                writtenBy, synopsis, docUrl,
                 updatedAt: serverTimestamp()
             });
+
             const idx = allCharacters.findIndex(c => c.id === editingId);
-            if (idx !== -1) Object.assign(allCharacters[idx], { title, status, charClass, race, region, affiliation, writtenBy, synopsis, docUrl });
+            if (idx !== -1) Object.assign(allCharacters[idx], {
+                title, status, charClass, race, region, affiliation,
+                writtenBy, synopsis, docUrl
+            });
+
+            // Sync updated character data to Lore Codex
+            await syncCharacterToLore({
+                id: editingId, title, status, charClass, race,
+                region, affiliation, writtenBy, synopsis, docUrl,
+                authorUid: currentUser.uid,
+                authorName: currentUser.displayName || currentUser.email
+            });
 
             await logChange("character_edited", `Character updated: ${title}`, synopsis.slice(0, 120));
             msgEl.textContent = "Character updated!";
             msgEl.className = "characters-form-msg success";
 
         } else {
+            // ── ADD ───────────────────────────────────────────
             const docRef = await addDoc(collection(db, "characters"), {
-                title, status, charClass, race, region, affiliation, writtenBy, synopsis, docUrl,
+                title, status, charClass, race, region, affiliation,
+                writtenBy, synopsis, docUrl,
                 authorUid: currentUser.uid,
                 authorName: currentUser.displayName || currentUser.email,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
 
-            allCharacters.unshift({
-                id: docRef.id, title, status, charClass, race, region, affiliation, writtenBy, synopsis, docUrl,
+            const newChar = {
+                id: docRef.id, title, status, charClass, race,
+                region, affiliation, writtenBy, synopsis, docUrl,
                 authorUid: currentUser.uid,
                 authorName: currentUser.displayName || currentUser.email
-            });
+            };
+            allCharacters.unshift(newChar);
+
+            // Sync new character to Lore Codex
+            await syncCharacterToLore(newChar);
 
             await logChange("character_added", `New character added: ${title}`, synopsis.slice(0, 120));
             msgEl.textContent = "Character added to the roster!";
@@ -429,6 +432,7 @@ async function deleteCharacter(id) {
     if (!confirm("Permanently remove this character from the roster?")) return;
     try {
         await deleteDoc(doc(db, "characters", id));
+        await unsyncCharacterFromLore(id);          // remove mirrored lore entry
         allCharacters = allCharacters.filter(c => c.id !== id);
         closeEntryModal();
         updateCounts();
@@ -447,6 +451,85 @@ async function logChange(type, summary, preview) {
             createdAt: serverTimestamp()
         });
     } catch (e) { /* non-critical */ }
+}
+
+// ============================================================
+//  LORE SYNC HELPERS
+// ============================================================
+
+/**
+ * Builds the synopsis string that will appear on the lore card.
+ * Auto-generated from character fields so it always stays current.
+ */
+function buildLoreSynopsis(character) {
+    const parts = [];
+    if (character.charClass) parts.push(character.charClass);
+    if (character.race) parts.push(character.race);
+    if (character.region) parts.push(`from ${character.region}`);
+    if (character.affiliation) parts.push(`· ${character.affiliation}`);
+    const header = parts.length ? `[${parts.join(" · ")}]` : "";
+    const status = character.status
+        ? `Status: ${capitalize(character.status)}.`
+        : "";
+    return [header, status, character.synopsis || ""].filter(Boolean).join("  ");
+}
+
+/**
+ * Finds the lore document that is linked to a given character ID.
+ * Returns the Firestore doc snapshot or null.
+ */
+async function findLoreEntryForCharacter(characterId) {
+    const q = query(collection(db, "lore"), where("linkedCharacterId", "==", characterId));
+    const snap = await getDocs(q);
+    return snap.empty ? null : snap.docs[0];
+}
+
+/**
+ * Creates or updates the mirrored lore entry for a character.
+ * Called after every successful add or edit.
+ */
+async function syncCharacterToLore(character) {
+    const loreData = {
+        title: character.title || "Unnamed Character",
+        category: "character",
+        synopsis: buildLoreSynopsis(character),
+        docUrl: character.docUrl || "",
+        linkedCharacterId: character.id,
+        authorName: character.writtenBy || character.authorName || "—",
+        updatedAt: serverTimestamp(),
+    };
+
+    try {
+        const existing = await findLoreEntryForCharacter(character.id);
+        if (existing) {
+            await updateDoc(doc(db, "lore", existing.id), loreData);
+            console.log(`[sync] Lore entry updated for: ${character.title}`);
+        } else {
+            await addDoc(collection(db, "lore"), {
+                ...loreData,
+                authorUid: character.authorUid || currentUser.uid,
+                createdAt: serverTimestamp(),
+            });
+            console.log(`[sync] Lore entry created for: ${character.title}`);
+        }
+    } catch (err) {
+        console.error("[sync] Character→Lore sync failed:", err);
+    }
+}
+
+/**
+ * Deletes the mirrored lore entry when a character is removed.
+ */
+async function unsyncCharacterFromLore(characterId) {
+    try {
+        const existing = await findLoreEntryForCharacter(characterId);
+        if (existing) {
+            await deleteDoc(doc(db, "lore", existing.id));
+            console.log(`[sync] Lore entry removed for character id: ${characterId}`);
+        }
+    } catch (err) {
+        console.error("[sync] Character→Lore unsync failed:", err);
+    }
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────
@@ -506,7 +589,8 @@ function runSearch() {
     hits.slice(0, 15).forEach(character => {
         const item = document.createElement("div");
         item.className = "characters-search-result";
-        const meta = [character.charClass, character.race, capitalize(character.status || "unknown")].filter(Boolean).join(" · ");
+        const meta = [character.charClass, character.race, capitalize(character.status || "unknown")]
+            .filter(Boolean).join(" · ");
         item.innerHTML = `
             <div class="characters-search-result-type">${meta}</div>
             <div class="characters-search-result-title">${highlight(escHtml(character.title || "Unnamed"), q)}</div>
@@ -524,7 +608,11 @@ function highlight(text, q) {
 
 // ── Helpers ───────────────────────────────────────────────────
 function escHtml(str) {
-    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
 }
 function capitalize(str) {
     return str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
