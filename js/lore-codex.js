@@ -359,8 +359,9 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
             const idx = allEntries.findIndex(e => e.id === editingId);
             if (idx !== -1) Object.assign(allEntries[idx], { title, category, synopsis, docUrl });
 
-            // Process any wikilinks in the updated text
-            await processWikilinks(title, synopsis);
+            // Process wikilinks — pass this entry's own ID so character
+            // stubs get linkedCharacterId stamped on THIS doc, not a new one
+            await processWikilinks(title, synopsis, editingId);
 
             msgEl.textContent = "Entry updated!";
             msgEl.className = "lore-form-msg success";
@@ -380,8 +381,8 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
                 authorName: currentUser.displayName || currentUser.email
             });
 
-            // Process any wikilinks in the new entry
-            await processWikilinks(title, synopsis);
+            // Process wikilinks — pass the new doc's ID so stamps land correctly
+            await processWikilinks(title, synopsis, docRef.id);
 
             msgEl.textContent = "Entry added to the codex!";
             msgEl.className = "lore-form-msg success";
@@ -588,7 +589,7 @@ async function findStubByName(collectionName, name) {
  * Also creates a mirrored lore entry for character stubs
  * (using linkedCharacterId so characters.js won't duplicate it).
  */
-async function processWikilinks(title, synopsis) {
+async function processWikilinks(title, synopsis, sourceLoreId) {
     const combined = `${title} ${synopsis}`;
     const links = parseWikilinks(combined);
 
@@ -599,26 +600,38 @@ async function processWikilinks(title, synopsis) {
         if (seen.has(key)) continue;
         seen.add(key);
 
-        await resolveWikilink(link.type, link.name, link.config);
+        await resolveWikilink(link.type, link.name, link.config, sourceLoreId);
     }
 }
 
 /**
- * resolveWikilink(type, name, config)
- * Core logic: create stub if target doesn't exist yet.
+ * resolveWikilink(type, name, config, sourceLoreId)
+ * Core logic: create stub in the target collection if it doesn't
+ * exist yet. For characters, stamps linkedCharacterId back onto
+ * the SOURCE lore entry so syncCharacterToLore() will update it
+ * instead of creating a duplicate later.
+ *
+ * We do NOT create any additional lore entries here — the lore
+ * entry that contains the [[...]] tag IS already the lore record.
  */
-async function resolveWikilink(type, name, config) {
+async function resolveWikilink(type, name, config, sourceLoreId) {
     try {
         const existing = await findStubByName(config.collection, name);
         if (existing) {
-            console.log(`[wiki] "${name}" already exists in ${config.collection} — skipping.`);
+            console.log(`[wiki] "${name}" already exists in ${config.collection} — skipping stub creation.`);
+
+            // If character already exists but the source lore entry isn't
+            // linked yet, stamp the link now so future syncs work correctly.
+            if (type === "character" && sourceLoreId) {
+                await stampLinkedCharacterId(sourceLoreId, existing.id, name);
+            }
             return;
         }
 
-        // Build the stub data for each supported type
-        let stubData = {
+        // Build the stub for the target collection
+        const stubData = {
             title: name,
-            source: "lore_wikilink",   // flag for Keepers
+            source: "lore_wikilink",
             authorUid: currentUser.uid,
             authorName: currentUser.displayName || currentUser.email,
             createdAt: serverTimestamp(),
@@ -637,25 +650,20 @@ async function resolveWikilink(type, name, config) {
                 docUrl: "",
             });
         } else if (type === "faction") {
-            Object.assign(stubData, {
-                synopsis: "",
-                docUrl: "",
-            });
+            Object.assign(stubData, { synopsis: "", docUrl: "" });
         } else if (type === "location") {
-            Object.assign(stubData, {
-                synopsis: "",
-                docUrl: "",
-                region: "",
-            });
+            Object.assign(stubData, { synopsis: "", docUrl: "", region: "" });
         }
 
         const newDocRef = await addDoc(collection(db, config.collection), stubData);
         console.log(`[wiki] Stub created: ${type} "${name}" (id: ${newDocRef.id})`);
 
-        // For character stubs, also create a mirrored lore entry so the
-        // Characters → Lore sync doesn't create a duplicate later.
-        if (type === "character") {
-            await createLoreStubForCharacter(newDocRef.id, name);
+        // For characters: stamp linkedCharacterId onto the SOURCE lore entry
+        // so that when a Keeper fills in the character stub later,
+        // syncCharacterToLore() finds this existing lore entry and
+        // updates it — no duplicate is ever created.
+        if (type === "character" && sourceLoreId) {
+            await stampLinkedCharacterId(sourceLoreId, newDocRef.id, name);
         }
 
     } catch (err) {
@@ -664,34 +672,24 @@ async function resolveWikilink(type, name, config) {
 }
 
 /**
- * createLoreStubForCharacter(characterId, name)
- * Creates (or skips if exists) a lore entry with category "character"
- * and linkedCharacterId set, so characters.js syncCharacterToLore()
- * will UPDATE rather than CREATE a duplicate when the stub is filled in.
+ * stampLinkedCharacterId(loreId, characterId, name)
+ * Updates the lore entry that contains the [[character: Name]] tag
+ * with linkedCharacterId, making it the canonical lore mirror so
+ * characters.js syncCharacterToLore() will update rather than create.
  */
-async function createLoreStubForCharacter(characterId, name) {
-    // Check if a linked lore entry already exists
-    const q = query(collection(db, "lore"), where("linkedCharacterId", "==", characterId));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-        console.log(`[wiki] Lore mirror already exists for character "${name}" — skipping.`);
-        return;
+async function stampLinkedCharacterId(loreId, characterId, name) {
+    try {
+        // Check it isn't already stamped to avoid redundant writes
+        const loreSnap = await getDoc(doc(db, "lore", loreId));
+        if (loreSnap.exists() && loreSnap.data().linkedCharacterId === characterId) {
+            console.log(`[wiki] lore entry already linked to character "${name}" — no stamp needed.`);
+            return;
+        }
+        await updateDoc(doc(db, "lore", loreId), { linkedCharacterId: characterId });
+        console.log(`[wiki] Stamped linkedCharacterId on lore entry for "${name}"`);
+    } catch (err) {
+        console.error(`[wiki] Failed to stamp linkedCharacterId for "${name}":`, err);
     }
-
-    await addDoc(collection(db, "lore"), {
-        title: name,
-        category: "character",
-        synopsis: "",
-        docUrl: "",
-        linkedCharacterId: characterId,
-        source: "lore_wikilink",
-        authorUid: currentUser.uid,
-        authorName: currentUser.displayName || currentUser.email,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-    });
-
-    console.log(`[wiki] Lore mirror created for character stub "${name}"`);
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────
