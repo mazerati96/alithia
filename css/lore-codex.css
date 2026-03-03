@@ -1301,3 +1301,184 @@ html, body {
         margin-right: 3rem;
     }
 }
+
+/* ============================================================
+   WIKILINK SYSTEM 
+   ============================================================ */
+
+/* ── Non-interactive badge (shown on cards) ─────────────────── */
+.lore-wikilink-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.42rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid transparent;
+    border-radius: 0;
+    vertical-align: middle;
+    margin: 0 0.1rem;
+}
+
+.lore-wikilink-character {
+    color: #a29bfe;
+    border-color: rgba(162, 155, 254, 0.3);
+    background: rgba(162, 155, 254, 0.05);
+}
+
+.lore-wikilink-faction {
+    color: #ff9f43;
+    border-color: rgba(255, 159, 67, 0.3);
+    background: rgba(255, 159, 67, 0.05);
+}
+
+.lore-wikilink-location {
+    color: #74b9ff;
+    border-color: rgba(116, 185, 255, 0.3);
+    background: rgba(116, 185, 255, 0.05);
+}
+
+/* ── Interactive chip (shown in modal body text) ────────────── */
+.lore-wikilink-chip {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: 0.48rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.15rem 0.55rem;
+    border: 1px solid transparent;
+    margin: 0 0.15rem;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, letter-spacing 0.2s;
+    position: relative;
+}
+
+    .lore-wikilink-chip::before {
+        content: '↗';
+        font-size: 0.6rem;
+        margin-right: 0.3rem;
+        opacity: 0.6;
+    }
+
+    .lore-wikilink-chip.lore-wikilink-character {
+        color: #a29bfe;
+        border-color: rgba(162, 155, 254, 0.35);
+        background: rgba(162, 155, 254, 0.06);
+    }
+
+        .lore-wikilink-chip.lore-wikilink-character:hover {
+            background: rgba(162, 155, 254, 0.14);
+            box-shadow: 0 0 12px rgba(162, 155, 254, 0.2);
+            letter-spacing: 0.18em;
+        }
+
+    .lore-wikilink-chip.lore-wikilink-faction {
+        color: #ff9f43;
+        border-color: rgba(255, 159, 67, 0.35);
+        background: rgba(255, 159, 67, 0.06);
+    }
+
+        .lore-wikilink-chip.lore-wikilink-faction:hover {
+            background: rgba(255, 159, 67, 0.14);
+            box-shadow: 0 0 12px rgba(255, 159, 67, 0.2);
+            letter-spacing: 0.18em;
+        }
+
+    .lore-wikilink-chip.lore-wikilink-location {
+        color: #74b9ff;
+        border-color: rgba(116, 185, 255, 0.35);
+        background: rgba(116, 185, 255, 0.06);
+    }
+
+        .lore-wikilink-chip.lore-wikilink-location:hover {
+            background: rgba(116, 185, 255, 0.14);
+            box-shadow: 0 0 12px rgba(116, 185, 255, 0.2);
+            letter-spacing: 0.18em;
+        }
+
+    .lore-wikilink-chip.lore-wikilink-loading {
+        opacity: 0.5;
+        pointer-events: none;
+        letter-spacing: 0.2em;
+    }
+
+/* ── Floating tooltip ────────────────────────────────────────── */
+.lore-wikilink-tooltip {
+    position: absolute;
+    z-index: 9999;
+    background: var(--surface-2);
+    border: 1px solid var(--green-border);
+    color: rgba(61, 255, 143, 0.7);
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    pointer-events: none;
+    animation: tooltipIn 0.15s ease forwards;
+    max-width: 280px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+@keyframes tooltipIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Stub warning badge on cards ────────────────────────────── */
+.lore-card-stub-badge {
+    font-family: var(--font-display);
+    font-size: 0.4rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #ffd32a;
+    border: 1px solid rgba(255, 211, 42, 0.3);
+    background: rgba(255, 211, 42, 0.05);
+    padding: 0.1rem 0.4rem;
+}
+
+/* ── Stub notice inside modal ────────────────────────────────── */
+.lore-stub-notice {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.82rem;
+    color: #ffd32a;
+    background: rgba(255, 211, 42, 0.05);
+    border: 1px solid rgba(255, 211, 42, 0.2);
+    padding: 0.6rem 0.9rem;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Wikilink hint in form ───────────────────────────────────── */
+.lore-wikilink-hint {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: rgba(61, 255, 143, 0.35);
+    border: 1px dashed rgba(61, 255, 143, 0.15);
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.25rem;
+}
+
+    .lore-wikilink-hint strong {
+        color: var(--green-dim);
+        font-style: normal;
+    }
+
+    .lore-wikilink-hint code {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--green-dim);
+        background: rgba(61, 255, 143, 0.06);
+        padding: 0.1rem 0.35rem;
+    }

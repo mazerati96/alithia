@@ -1,13 +1,13 @@
 // ============================================================
-//  js/lore-codex.js  —  Alithia Lore Codex
+//  js/lore-codex.js  —  Alithia Lore Codex (with Wikilinks)
 // ============================================================
 
 import { auth, db } from "../auth/firebase-config.js";
-import { onAuthStateChanged, signOut }
+import { onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
     collection, addDoc, getDocs, getDoc, doc, deleteDoc,
-    updateDoc, query, orderBy, serverTimestamp, where
+    updateDoc, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Particle canvas ──────────────────────────────────────────
@@ -44,9 +44,21 @@ resizeCanvas(); initParticles(); requestAnimationFrame(drawParticles);
 // ── State ────────────────────────────────────────────────────
 let currentUser = null;
 let isKeeper = false;
-let allEntries = [];       // full cache from Firestore
+let allEntries = [];
 let activeCat = "all";
-let editingId = null;     // null = new entry, string = editing existing
+let editingId = null;
+
+// ── Wikilink config ───────────────────────────────────────────
+// Maps [[type: Name]] → { collection, page, label }
+const WIKILINK_TYPES = {
+    character: { collection: "characters", page: "characters.html", label: "Character" },
+    faction: { collection: "factions", page: "factions.html", label: "Faction" },
+    location: { collection: "locations", page: "locations.html", label: "Location" },
+};
+
+// Regex: matches [[type: Name]] anywhere in a string
+// Capture group 1 = type, group 2 = name
+const WIKILINK_RE = /\[\[([a-zA-Z]+):\s*([^\]]+?)\s*\]\]/g;
 
 // ── Category meta ─────────────────────────────────────────────
 const CAT_LABELS = {
@@ -77,7 +89,6 @@ onAuthStateChanged(auth, async (user) => {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (userDoc.exists()) isKeeper = userDoc.data().role === "keeper";
 
-    // Show add button for keepers
     if (isKeeper) document.getElementById("loreAddBtn").classList.remove("hidden");
 
     authGuard.classList.add("fade-out");
@@ -108,7 +119,6 @@ async function loadEntries() {
 function updateCounts() {
     const counts = { region: 0, faction: 0, character: 0, history: 0, magic: 0, misc: 0, vel: 0 };
     allEntries.forEach(e => { if (counts[e.category] !== undefined) counts[e.category]++; });
-
     document.getElementById("countAll").textContent = allEntries.length;
     document.getElementById("countRegion").textContent = counts.region;
     document.getElementById("countFaction").textContent = counts.faction;
@@ -141,10 +151,7 @@ function renderGrid() {
         return;
     }
 
-    visible.forEach((entry, i) => {
-        const card = buildCard(entry, i);
-        loreGrid.appendChild(card);
-    });
+    visible.forEach((entry, i) => loreGrid.appendChild(buildCard(entry, i)));
 }
 
 // ── Build entry card ──────────────────────────────────────────
@@ -157,16 +164,25 @@ function buildCard(entry, index) {
 
     const catLabel = CAT_LABELS[entry.category] || entry.category || "Misc";
     const desc = entry.synopsis || entry.content || "";
-    const hasDoc = !!(entry.docUrl && entry.docUrl.trim());
+    const hasDoc = !!(entry.docUrl?.trim());
+
+    // Render wikilinks as simple badges on the card (non-interactive preview)
+    const previewDesc = stripWikilinks(desc);
+
+    // Show stub badge if this entry was auto-created by a wikilink
+    const stubBadge = entry.source === "lore_wikilink"
+        ? '<span class="lore-card-stub-badge">⚠ Stub</span>'
+        : "";
 
     card.innerHTML = `
 <div class="lore-card-inner">
     <div class="lore-card-top">
         <span class="lore-card-cat">${catLabel}</span>
+        ${stubBadge}
         ${hasDoc ? '<span class="lore-card-doc-badge">📋 doc linked</span>' : ""}
     </div>
-    <div class="lore-card-title">${escHtml(entry.title || "Untitled Entry")}</div>
-    <div class="lore-card-desc">${escHtml(desc) || "<em>No synopsis yet.</em>"}</div>
+    <div class="lore-card-title">${renderWikilinkBadges(escHtml(entry.title || "Untitled Entry"))}</div>
+    <div class="lore-card-desc">${escHtml(previewDesc) || "<em>No synopsis yet.</em>"}</div>
     <div class="lore-card-footer">
         <span class="lore-card-author">${escHtml(entry.authorName || "—")}</span>
         <span class="lore-card-arrow">→</span>
@@ -199,13 +215,28 @@ function openEntryModal(entry) {
         ? `Updated ${formatTime(entry.updatedAt.toDate())}`
         : (entry.createdAt ? `Added ${formatTime(entry.createdAt.toDate())}` : "—");
 
-    document.getElementById("modalDesc").textContent = entry.synopsis || entry.content || "";
+    // Render the synopsis with interactive wikilink chips
+    const descEl = document.getElementById("modalDesc");
+    descEl.innerHTML = "";
+    if (entry.synopsis || entry.content) {
+        descEl.appendChild(buildWikilinkContent(entry.synopsis || entry.content));
+    }
 
-    // Google Doc link button or placeholder
+    // Stub notice
+    const existingNotice = document.getElementById("modalStubNotice");
+    if (existingNotice) existingNotice.remove();
+    if (entry.source === "lore_wikilink") {
+        const notice = document.createElement("div");
+        notice.id = "modalStubNotice";
+        notice.className = "lore-stub-notice";
+        notice.innerHTML = `⚠ This entry was auto-created by a wikilink. A Keeper should fill in the details.`;
+        descEl.before(notice);
+    }
+
+    // Google Doc section
     const frameEl = document.getElementById("modalDocFrame");
     frameEl.innerHTML = "";
-
-    if (entry.docUrl && entry.docUrl.trim()) {
+    if (entry.docUrl?.trim()) {
         frameEl.innerHTML = `
 <div class="lore-doc-linked">
     <div class="lore-doc-linked-info">
@@ -217,12 +248,10 @@ function openEntryModal(entry) {
     </div>
     <a class="lore-doc-open-btn"
        href="${escHtml(entry.docUrl.trim())}"
-       target="_blank"
-       rel="noopener noreferrer">
+       target="_blank" rel="noopener noreferrer">
         Open in Google Docs →
     </a>
-</div>
-        `;
+</div>`;
     } else {
         frameEl.innerHTML = `
 <div class="lore-doc-placeholder">
@@ -233,8 +262,7 @@ function openEntryModal(entry) {
         When a Google Doc is ready, anyone can attach it via
         <code>Edit Entry → Google Doc URL</code> and it will appear here automatically.
     </div>
-</div>
-        `;
+</div>`;
     }
 
     // Keeper controls
@@ -275,6 +303,19 @@ function openEntryForm(existingEntry = null) {
     document.getElementById("formSubmitBtn").disabled = false;
     document.getElementById("formSubmitBtn").textContent = "Save Entry";
 
+    // Show wikilink hint in the form
+    let hint = document.getElementById("wikilinkHint");
+    if (!hint) {
+        hint = document.createElement("div");
+        hint.id = "wikilinkHint";
+        hint.className = "lore-form-hint lore-wikilink-hint";
+        hint.innerHTML = `
+            <strong>Wikilinks:</strong> Use <code>[[character: Name]]</code>,
+            <code>[[faction: Name]]</code>, or <code>[[location: Name]]</code>
+            in the title or synopsis to auto-link and create stubs.`;
+        document.getElementById("formDesc").after(hint);
+    }
+
     document.getElementById("entryFormBackdrop").classList.remove("hidden");
     document.body.style.overflow = "hidden";
 }
@@ -311,20 +352,20 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
 
     try {
         if (editingId) {
-            // Update existing
             await updateDoc(doc(db, "lore", editingId), {
                 title, category, synopsis, docUrl,
                 updatedAt: serverTimestamp()
             });
-            // Update local cache
             const idx = allEntries.findIndex(e => e.id === editingId);
             if (idx !== -1) Object.assign(allEntries[idx], { title, category, synopsis, docUrl });
+
+            // Process any wikilinks in the updated text
+            await processWikilinks(title, synopsis);
 
             msgEl.textContent = "Entry updated!";
             msgEl.className = "lore-form-msg success";
 
         } else {
-            // Create new
             const docRef = await addDoc(collection(db, "lore"), {
                 title, category, synopsis, docUrl,
                 authorUid: currentUser.uid,
@@ -338,6 +379,9 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
                 authorUid: currentUser.uid,
                 authorName: currentUser.displayName || currentUser.email
             });
+
+            // Process any wikilinks in the new entry
+            await processWikilinks(title, synopsis);
 
             msgEl.textContent = "Entry added to the codex!";
             msgEl.className = "lore-form-msg success";
@@ -369,6 +413,287 @@ async function deleteEntry(id) {
     } catch (err) { console.error("Lore delete failed:", err); }
 }
 
+// ============================================================
+//  WIKILINK SYSTEM
+// ============================================================
+
+/**
+ * parseWikilinks(text)
+ * Returns an array of { type, name, config } objects for every
+ * [[type: Name]] tag found in the given string.
+ * Skips unrecognised types silently.
+ */
+function parseWikilinks(text) {
+    if (!text) return [];
+    const results = [];
+    let match;
+    const re = new RegExp(WIKILINK_RE.source, "gi"); // fresh regex each call
+    while ((match = re.exec(text)) !== null) {
+        const type = match[1].toLowerCase();
+        const name = match[2].trim();
+        const config = WIKILINK_TYPES[type];
+        if (config) results.push({ type, name, config, raw: match[0] });
+    }
+    return results;
+}
+
+/**
+ * stripWikilinks(text)
+ * Returns text with [[...]] replaced by just the Name part.
+ * Used for card previews where we want clean plain text.
+ */
+function stripWikilinks(text) {
+    if (!text) return "";
+    return text.replace(new RegExp(WIKILINK_RE.source, "gi"), (_, _type, name) => name.trim());
+}
+
+/**
+ * renderWikilinkBadges(html)
+ * Replaces [[type: Name]] in already-escaped HTML with a
+ * simple non-interactive styled badge (used on cards).
+ */
+function renderWikilinkBadges(html) {
+    return html.replace(/\[\[([a-zA-Z]+):\s*([^\]]+?)\s*\]\]/gi, (_, type, name) => {
+        const t = type.toLowerCase();
+        const cfg = WIKILINK_TYPES[t];
+        if (!cfg) return escHtml(name);
+        return `<span class="lore-wikilink-badge lore-wikilink-${t}">${escHtml(cfg.label)}: ${escHtml(name)}</span>`;
+    });
+}
+
+/**
+ * buildWikilinkContent(text)
+ * Returns a DocumentFragment with plain text and interactive
+ * wikilink chips. Each chip checks Firestore and either
+ * navigates to the linked page or shows a "stub" tooltip.
+ */
+function buildWikilinkContent(text) {
+    const frag = document.createDocumentFragment();
+    const re = new RegExp(WIKILINK_RE.source, "gi");
+    let lastIdx = 0;
+    let match;
+
+    while ((match = re.exec(text)) !== null) {
+        // Plain text before this match
+        if (match.index > lastIdx) {
+            frag.appendChild(document.createTextNode(text.slice(lastIdx, match.index)));
+        }
+
+        const type = match[1].toLowerCase();
+        const name = match[2].trim();
+        const cfg = WIKILINK_TYPES[type];
+
+        if (cfg) {
+            const chip = document.createElement("a");
+            chip.className = `lore-wikilink-chip lore-wikilink-${type}`;
+            chip.textContent = `${cfg.label}: ${name}`;
+            chip.href = "#";
+            chip.title = `Navigate to ${name}`;
+
+            chip.addEventListener("click", async (e) => {
+                e.preventDefault();
+                await navigateWikilink(type, name, cfg, chip);
+            });
+
+            frag.appendChild(chip);
+        } else {
+            // Unrecognised type — render plain
+            frag.appendChild(document.createTextNode(name));
+        }
+
+        lastIdx = match.index + match[0].length;
+    }
+
+    // Remaining plain text
+    if (lastIdx < text.length) {
+        frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+    }
+
+    return frag;
+}
+
+/**
+ * navigateWikilink(type, name, config, chipEl)
+ * Called when a wikilink chip is clicked in the modal.
+ * Looks up the target in Firestore; if found opens the entry
+ * modal (for characters) or navigates to the page. If not
+ * found, shows a tooltip — the stub was already created on save.
+ */
+async function navigateWikilink(type, name, cfg, chipEl) {
+    chipEl.textContent = "…";
+    chipEl.classList.add("lore-wikilink-loading");
+
+    try {
+        const existing = await findStubByName(cfg.collection, name);
+
+        chipEl.textContent = `${cfg.label}: ${name}`;
+        chipEl.classList.remove("lore-wikilink-loading");
+
+        if (existing) {
+            if (type === "character") {
+                // Open character modal inline — navigate to page with anchor
+                window.location.href = `${cfg.page}?open=${encodeURIComponent(existing.id)}`;
+            } else {
+                window.location.href = `${cfg.page}?open=${encodeURIComponent(existing.id)}`;
+            }
+        } else {
+            // Shouldn't normally happen (stub created on save), but handle gracefully
+            showWikilinkTooltip(chipEl, `"${name}" not found — it may have been deleted.`);
+        }
+    } catch (err) {
+        console.error("Wikilink navigation failed:", err);
+        chipEl.textContent = `${cfg.label}: ${name}`;
+        chipEl.classList.remove("lore-wikilink-loading");
+        showWikilinkTooltip(chipEl, "Could not load — check your connection.");
+    }
+}
+
+/**
+ * showWikilinkTooltip(el, message)
+ * Briefly shows a floating tooltip below the chip element.
+ */
+function showWikilinkTooltip(el, message) {
+    const existing = document.getElementById("wikilinkTooltip");
+    if (existing) existing.remove();
+
+    const tip = document.createElement("div");
+    tip.id = "wikilinkTooltip";
+    tip.className = "lore-wikilink-tooltip";
+    tip.textContent = message;
+
+    const rect = el.getBoundingClientRect();
+    tip.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    tip.style.left = `${rect.left + window.scrollX}px`;
+    document.body.appendChild(tip);
+
+    setTimeout(() => tip.remove(), 3000);
+}
+
+/**
+ * findStubByName(collectionName, name)
+ * Queries Firestore for a document in collectionName where
+ * title == name (case-sensitive). Returns the doc data + id, or null.
+ */
+async function findStubByName(collectionName, name) {
+    const q = query(collection(db, collectionName), where("title", "==", name));
+    const snap = await getDocs(q);
+    return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+}
+
+/**
+ * processWikilinks(title, synopsis)
+ * Scans both fields for [[type: Name]] tags.
+ * For each tag: checks if target already exists → skip.
+ *              If not → creates a stub in the right collection.
+ * Also creates a mirrored lore entry for character stubs
+ * (using linkedCharacterId so characters.js won't duplicate it).
+ */
+async function processWikilinks(title, synopsis) {
+    const combined = `${title} ${synopsis}`;
+    const links = parseWikilinks(combined);
+
+    // Deduplicate by type+name so we don't double-create
+    const seen = new Set();
+    for (const link of links) {
+        const key = `${link.type}:${link.name.toLowerCase()}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        await resolveWikilink(link.type, link.name, link.config);
+    }
+}
+
+/**
+ * resolveWikilink(type, name, config)
+ * Core logic: create stub if target doesn't exist yet.
+ */
+async function resolveWikilink(type, name, config) {
+    try {
+        const existing = await findStubByName(config.collection, name);
+        if (existing) {
+            console.log(`[wiki] "${name}" already exists in ${config.collection} — skipping.`);
+            return;
+        }
+
+        // Build the stub data for each supported type
+        let stubData = {
+            title: name,
+            source: "lore_wikilink",   // flag for Keepers
+            authorUid: currentUser.uid,
+            authorName: currentUser.displayName || currentUser.email,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+
+        if (type === "character") {
+            Object.assign(stubData, {
+                status: "unknown",
+                charClass: "",
+                race: "",
+                region: "",
+                affiliation: "",
+                writtenBy: "",
+                synopsis: "",
+                docUrl: "",
+            });
+        } else if (type === "faction") {
+            Object.assign(stubData, {
+                synopsis: "",
+                docUrl: "",
+            });
+        } else if (type === "location") {
+            Object.assign(stubData, {
+                synopsis: "",
+                docUrl: "",
+                region: "",
+            });
+        }
+
+        const newDocRef = await addDoc(collection(db, config.collection), stubData);
+        console.log(`[wiki] Stub created: ${type} "${name}" (id: ${newDocRef.id})`);
+
+        // For character stubs, also create a mirrored lore entry so the
+        // Characters → Lore sync doesn't create a duplicate later.
+        if (type === "character") {
+            await createLoreStubForCharacter(newDocRef.id, name);
+        }
+
+    } catch (err) {
+        console.error(`[wiki] Failed to resolve wikilink for "${name}":`, err);
+    }
+}
+
+/**
+ * createLoreStubForCharacter(characterId, name)
+ * Creates (or skips if exists) a lore entry with category "character"
+ * and linkedCharacterId set, so characters.js syncCharacterToLore()
+ * will UPDATE rather than CREATE a duplicate when the stub is filled in.
+ */
+async function createLoreStubForCharacter(characterId, name) {
+    // Check if a linked lore entry already exists
+    const q = query(collection(db, "lore"), where("linkedCharacterId", "==", characterId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+        console.log(`[wiki] Lore mirror already exists for character "${name}" — skipping.`);
+        return;
+    }
+
+    await addDoc(collection(db, "lore"), {
+        title: name,
+        category: "character",
+        synopsis: "",
+        docUrl: "",
+        linkedCharacterId: characterId,
+        source: "lore_wikilink",
+        authorUid: currentUser.uid,
+        authorName: currentUser.displayName || currentUser.email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    });
+
+    console.log(`[wiki] Lore mirror created for character stub "${name}"`);
+}
+
 // ── Keyboard shortcuts ────────────────────────────────────────
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -387,7 +712,6 @@ document.getElementById("loreSearchBtn").addEventListener("click", () => {
     loreSearchOverlay.classList.remove("hidden");
     loreSearchInput.focus();
 });
-
 document.getElementById("loreSearchClose").addEventListener("click", closeLoreSearch);
 document.getElementById("loreSearchOverlay").addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeLoreSearch();
@@ -432,12 +756,9 @@ function runSearch() {
         item.innerHTML = `
 <div class="lore-search-result-cat">${CAT_LABELS[entry.category] || entry.category}</div>
 <div class="lore-search-result-title">${highlight(escHtml(entry.title || "Untitled"), q)}</div>
-<div class="lore-search-result-desc">${escHtml(entry.synopsis || "")}</div>
+<div class="lore-search-result-desc">${escHtml(stripWikilinks(entry.synopsis || ""))}</div>
         `;
-        item.addEventListener("click", () => {
-            closeLoreSearch();
-            openEntryModal(entry);
-        });
+        item.addEventListener("click", () => { closeLoreSearch(); openEntryModal(entry); });
         loreSearchResults.appendChild(item);
     });
 }
@@ -455,7 +776,6 @@ function escHtml(str) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
 }
-
 function formatTime(date) {
     const diff = Date.now() - date.getTime();
     const mins = Math.floor(diff / 60000);
