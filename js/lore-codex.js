@@ -285,8 +285,15 @@ function closeEntryModal() {
 }
 
 document.getElementById("entryModalClose").addEventListener("click", closeEntryModal);
+// Use mousedown to record where the press started — this prevents the modal from
+// closing when the user click-drags to highlight text and releases over the backdrop.
+let entryModalMousedownTarget = null;
+document.getElementById("entryModalBackdrop").addEventListener("mousedown", (e) => {
+    entryModalMousedownTarget = e.target;
+});
 document.getElementById("entryModalBackdrop").addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) closeEntryModal();
+    if (entryModalMousedownTarget === e.currentTarget && e.target === e.currentTarget) closeEntryModal();
+    entryModalMousedownTarget = null;
 });
 
 // ── Add / Edit form modal ─────────────────────────────────────
@@ -329,8 +336,15 @@ function closeEntryForm() {
 document.getElementById("loreAddBtn").addEventListener("click", () => openEntryForm());
 document.getElementById("entryFormClose").addEventListener("click", closeEntryForm);
 document.getElementById("formCancelBtn").addEventListener("click", closeEntryForm);
+// Use mousedown to record where the press started — this prevents the modal from
+// closing when the user click-drags to highlight text and releases over the backdrop.
+let entryFormMousedownTarget = null;
+document.getElementById("entryFormBackdrop").addEventListener("mousedown", (e) => {
+    entryFormMousedownTarget = e.target;
+});
 document.getElementById("entryFormBackdrop").addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) closeEntryForm();
+    if (entryFormMousedownTarget === e.currentTarget && e.target === e.currentTarget) closeEntryForm();
+    entryFormMousedownTarget = null;
 });
 
 document.getElementById("formSubmitBtn").addEventListener("click", async () => {
