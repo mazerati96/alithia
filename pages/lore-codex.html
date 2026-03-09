@@ -190,16 +190,22 @@
                 <input type="text" class="lore-form-input" id="formTitle"
                        placeholder="e.g. The Ashwood Reach" maxlength="80" />
 
-                <label class="lore-form-label">Category</label>
-                <select class="lore-form-input lore-form-select" id="formCategory">
-                    <option value="region">🗺 Region</option>
-                    <option value="faction">⚔ Faction</option>
-                    <option value="character">👤 Character</option>
-                    <option value="history">📜 History</option>
-                    <option value="magic">✧ Magic & Arcana</option>
-                    <option value="misc">◈ Miscellany</option>
-                    <option value="vel">* Vel</option>
-                </select>
+                <label class="lore-form-label">Categories <span class="lore-form-hint">(select one or more)</span></label>
+                <div class="lore-multiselect" id="formCategoryWrap">
+                    <button type="button" class="lore-multiselect-trigger" id="formCategoryTrigger" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="lore-multiselect-label" id="formCategoryLabel">Select categories…</span>
+                        <span class="lore-multiselect-arrow">▾</span>
+                    </button>
+                    <div class="lore-multiselect-dropdown hidden" id="formCategoryDropdown" role="listbox" aria-multiselectable="true">
+                        <label class="lore-multiselect-option"><input type="checkbox" value="region" /><span class="lore-ms-icon">🗺</span> Region</label>
+                        <label class="lore-multiselect-option"><input type="checkbox" value="faction" /><span class="lore-ms-icon">⚔</span> Faction</label>
+                        <label class="lore-multiselect-option"><input type="checkbox" value="character" /><span class="lore-ms-icon">👤</span> Character</label>
+                        <label class="lore-multiselect-option"><input type="checkbox" value="history" /><span class="lore-ms-icon">📜</span> History</label>
+                        <label class="lore-multiselect-option"><input type="checkbox" value="magic" /><span class="lore-ms-icon">✧</span> Magic & Arcana</label>
+                        <label class="lore-multiselect-option"><input type="checkbox" value="misc" /><span class="lore-ms-icon">◈</span> Miscellany</label>
+                        <label class="lore-multiselect-option"><input type="checkbox" value="vel" /><span class="lore-ms-icon">*</span> Vel</label>
+                    </div>
+                </div>
 
                 <label class="lore-form-label">Synopsis <span class="lore-form-hint">(shown on the card)</span></label>
                 <textarea class="lore-form-input lore-form-textarea" id="formDesc"

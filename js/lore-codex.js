@@ -118,7 +118,12 @@ async function loadEntries() {
 // ── Count badges ─────────────────────────────────────────────
 function updateCounts() {
     const counts = { region: 0, faction: 0, character: 0, history: 0, magic: 0, misc: 0, vel: 0 };
-    allEntries.forEach(e => { if (counts[e.category] !== undefined) counts[e.category]++; });
+    allEntries.forEach(e => {
+        const cats = Array.isArray(e.categories) && e.categories.length
+            ? e.categories
+            : (e.category ? [e.category] : []);
+        cats.forEach(c => { if (counts[c] !== undefined) counts[c]++; });
+    });
     document.getElementById("countAll").textContent = allEntries.length;
     document.getElementById("countRegion").textContent = counts.region;
     document.getElementById("countFaction").textContent = counts.faction;
@@ -135,7 +140,12 @@ function renderGrid() {
 
     const visible = activeCat === "all"
         ? allEntries
-        : allEntries.filter(e => e.category === activeCat);
+        : allEntries.filter(e => {
+            const cats = Array.isArray(e.categories) && e.categories.length
+                ? e.categories
+                : (e.category ? [e.category] : []);
+            return cats.includes(activeCat);
+        });
 
     const title = activeCat === "all" ? "All Entries" : (CAT_LABELS[activeCat] || activeCat);
     document.getElementById("loreMainTitle").textContent = title;
@@ -158,18 +168,23 @@ function renderGrid() {
 function buildCard(entry, index) {
     const card = document.createElement("div");
     card.className = "lore-card";
-    card.dataset.cat = entry.category || "misc";
+    // Support both new (array) and legacy (string) category storage
+    const cats = Array.isArray(entry.categories) && entry.categories.length
+        ? entry.categories
+        : (entry.category ? [entry.category] : ["misc"]);
+    card.dataset.cat = cats[0]; // primary colour strip uses first category
     card.dataset.id = entry.id;
     card.style.animationDelay = `${index * 50}ms`;
 
-    const catLabel = CAT_LABELS[entry.category] || entry.category || "Misc";
+    // Build category tag pills
+    const catPills = cats.map(c => {
+        const label = CAT_LABELS[c] || c;
+        return `<span class="lore-card-cat" data-cat="${c}">${label}</span>`;
+    }).join("");
+
     const desc = entry.synopsis || entry.content || "";
     const hasDoc = !!(entry.docUrl?.trim());
-
-    // Render wikilinks as simple badges on the card (non-interactive preview)
     const previewDesc = stripWikilinks(desc);
-
-    // Show stub badge if this entry was auto-created by a wikilink
     const stubBadge = entry.source === "lore_wikilink"
         ? '<span class="lore-card-stub-badge">⚠ Stub</span>'
         : "";
@@ -177,7 +192,7 @@ function buildCard(entry, index) {
     card.innerHTML = `
 <div class="lore-card-inner">
     <div class="lore-card-top">
-        <span class="lore-card-cat">${catLabel}</span>
+        <div class="lore-card-cats">${catPills}</div>
         ${stubBadge}
         ${hasDoc ? '<span class="lore-card-doc-badge">📋 doc linked</span>' : ""}
     </div>
@@ -208,7 +223,11 @@ document.querySelectorAll(".lore-nav-item").forEach(btn => {
 function openEntryModal(entry) {
     const backdrop = document.getElementById("entryModalBackdrop");
 
-    document.getElementById("modalCatTag").textContent = CAT_LABELS[entry.category] || entry.category || "Entry";
+    const entryCats = Array.isArray(entry.categories) && entry.categories.length
+        ? entry.categories
+        : (entry.category ? [entry.category] : ["misc"]);
+    const catTagEl = document.getElementById("modalCatTag");
+    catTagEl.textContent = entryCats.map(c => CAT_LABELS[c] || c).join("  ·  ");
     document.getElementById("modalTitle").textContent = entry.title || "Untitled Entry";
     document.getElementById("modalAuthor").textContent = `by ${entry.authorName || "Unknown"}`;
     document.getElementById("modalUpdated").textContent = entry.updatedAt
@@ -302,7 +321,17 @@ function openEntryForm(existingEntry = null) {
 
     document.getElementById("formModalTitle").textContent = editingId ? "Edit Lore Entry" : "Add Lore Entry";
     document.getElementById("formTitle").value = existingEntry?.title || "";
-    document.getElementById("formCategory").value = existingEntry?.category || "region";
+    // ── Multi-category support ──────────────────────────────────
+    // categories may be stored as an array (new) or a single string (legacy)
+    const existingCats = existingEntry
+        ? (Array.isArray(existingEntry.categories)
+            ? existingEntry.categories
+            : existingEntry.category ? [existingEntry.category] : [])
+        : [];
+    document.querySelectorAll("#formCategoryDropdown input[type=checkbox]").forEach(cb => {
+        cb.checked = existingCats.includes(cb.value);
+    });
+    updateMultiselectLabel();
     document.getElementById("formDesc").value = existingEntry?.synopsis || existingEntry?.content || "";
     document.getElementById("formDocUrl").value = existingEntry?.docUrl || "";
     document.getElementById("formMsg").textContent = "";
@@ -347,9 +376,50 @@ document.getElementById("entryFormBackdrop").addEventListener("click", (e) => {
     entryFormMousedownTarget = null;
 });
 
+// ── Multi-select category widget ──────────────────────────────
+const multiTrigger = document.getElementById("formCategoryTrigger");
+const multiDropdown = document.getElementById("formCategoryDropdown");
+const multiLabel = document.getElementById("formCategoryLabel");
+
+const CAT_PLAIN_LABELS = {
+    region: "Region", faction: "Faction", character: "Character",
+    history: "History", magic: "Magic & Arcana", misc: "Miscellany", vel: "Vel"
+};
+
+function updateMultiselectLabel() {
+    const checked = [...document.querySelectorAll("#formCategoryDropdown input:checked")]
+        .map(cb => CAT_PLAIN_LABELS[cb.value] || cb.value);
+    multiLabel.textContent = checked.length ? checked.join(", ") : "Select categories…";
+}
+
+function getSelectedCategories() {
+    return [...document.querySelectorAll("#formCategoryDropdown input:checked")].map(cb => cb.value);
+}
+
+multiTrigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !multiDropdown.classList.contains("hidden");
+    multiDropdown.classList.toggle("hidden", isOpen);
+    multiTrigger.setAttribute("aria-expanded", String(!isOpen));
+});
+
+multiDropdown.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.addEventListener("change", updateMultiselectLabel);
+});
+
+// Close dropdown when clicking outside the widget
+document.addEventListener("click", (e) => {
+    if (!document.getElementById("formCategoryWrap").contains(e.target)) {
+        multiDropdown.classList.add("hidden");
+        multiTrigger.setAttribute("aria-expanded", "false");
+    }
+});
+
 document.getElementById("formSubmitBtn").addEventListener("click", async () => {
     const title = document.getElementById("formTitle").value.trim();
-    const category = document.getElementById("formCategory").value;
+    const categories = getSelectedCategories();
+    // Keep a legacy `category` field (first selected) for backward-compat display
+    const category = categories[0] || "misc";
     const synopsis = document.getElementById("formDesc").value.trim();
     const docUrl = document.getElementById("formDocUrl").value.trim();
     const msgEl = document.getElementById("formMsg");
@@ -360,6 +430,11 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
         msgEl.className = "lore-form-msg error";
         return;
     }
+    if (categories.length === 0) {
+        msgEl.textContent = "Please select at least one category.";
+        msgEl.className = "lore-form-msg error";
+        return;
+    }
 
     btn.disabled = true;
     btn.textContent = editingId ? "Saving…" : "Adding…";
@@ -367,11 +442,11 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
     try {
         if (editingId) {
             await updateDoc(doc(db, "lore", editingId), {
-                title, category, synopsis, docUrl,
+                title, category, categories, synopsis, docUrl,
                 updatedAt: serverTimestamp()
             });
             const idx = allEntries.findIndex(e => e.id === editingId);
-            if (idx !== -1) Object.assign(allEntries[idx], { title, category, synopsis, docUrl });
+            if (idx !== -1) Object.assign(allEntries[idx], { title, category, categories, synopsis, docUrl });
 
             // Process wikilinks — pass this entry's own ID so character
             // stubs get linkedCharacterId stamped on THIS doc, not a new one
@@ -382,7 +457,7 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
 
         } else {
             const docRef = await addDoc(collection(db, "lore"), {
-                title, category, synopsis, docUrl,
+                title, category, categories, synopsis, docUrl,
                 authorUid: currentUser.uid,
                 authorName: currentUser.displayName || currentUser.email,
                 createdAt: serverTimestamp(),
@@ -390,7 +465,7 @@ document.getElementById("formSubmitBtn").addEventListener("click", async () => {
             });
 
             allEntries.unshift({
-                id: docRef.id, title, category, synopsis, docUrl,
+                id: docRef.id, title, category, categories, synopsis, docUrl,
                 authorUid: currentUser.uid,
                 authorName: currentUser.displayName || currentUser.email
             });

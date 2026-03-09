@@ -548,9 +548,17 @@ html, body {
 
 .lore-card-top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.lore-card-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    flex: 1;
 }
 
 .lore-card-cat {
@@ -562,35 +570,40 @@ html, body {
     border: 1px solid transparent;
 }
 
-.lore-card[data-cat="region"] .lore-card-cat {
-    color: var(--cat-region);
-    border-color: rgba(61,255,143,0.25);
-}
+    .lore-card-cat[data-cat="region"] {
+        color: var(--cat-region);
+        border-color: rgba(61,255,143,0.25);
+    }
 
-.lore-card[data-cat="faction"] .lore-card-cat {
-    color: var(--cat-faction);
-    border-color: rgba(255,159,67,0.25);
-}
+    .lore-card-cat[data-cat="faction"] {
+        color: var(--cat-faction);
+        border-color: rgba(255,159,67,0.25);
+    }
 
-.lore-card[data-cat="character"] .lore-card-cat {
-    color: var(--cat-character);
-    border-color: rgba(162,155,254,0.25);
-}
+    .lore-card-cat[data-cat="character"] {
+        color: var(--cat-character);
+        border-color: rgba(162,155,254,0.25);
+    }
 
-.lore-card[data-cat="history"] .lore-card-cat {
-    color: var(--cat-history);
-    border-color: rgba(255,211,42,0.25);
-}
+    .lore-card-cat[data-cat="history"] {
+        color: var(--cat-history);
+        border-color: rgba(255,211,42,0.25);
+    }
 
-.lore-card[data-cat="magic"] .lore-card-cat {
-    color: var(--cat-magic);
-    border-color: rgba(116,185,255,0.25);
-}
+    .lore-card-cat[data-cat="magic"] {
+        color: var(--cat-magic);
+        border-color: rgba(116,185,255,0.25);
+    }
 
-.lore-card[data-cat="misc"] .lore-card-cat {
-    color: var(--cat-misc);
-    border-color: rgba(85,239,196,0.25);
-}
+    .lore-card-cat[data-cat="misc"] {
+        color: var(--cat-misc);
+        border-color: rgba(85,239,196,0.25);
+    }
+
+    .lore-card-cat[data-cat="vel"] {
+        color: var(--green-dim);
+        border-color: var(--green-border);
+    }
 
 .lore-card-doc-badge {
     font-family: var(--font-body);
@@ -1029,6 +1042,138 @@ html, body {
 
 .lore-form-select {
     cursor: pointer;
+}
+
+/* ── Multi-select category widget ──────────────────────────── */
+.lore-multiselect {
+    position: relative;
+    width: 100%;
+}
+
+.lore-multiselect-trigger {
+    width: 100%;
+    background: rgba(61,255,143,0.04);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.6rem 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    text-align: left;
+    transition: border-color 0.3s;
+}
+
+    .lore-multiselect-trigger:focus,
+    .lore-multiselect-trigger[aria-expanded="true"] {
+        border-color: rgba(61,255,143,0.5);
+        outline: none;
+    }
+
+.lore-multiselect-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-style: italic;
+    color: rgba(61,255,143,0.6);
+}
+
+    .lore-multiselect-trigger[aria-expanded="true"] .lore-multiselect-label,
+    .lore-multiselect-label:not(:empty) {
+        color: var(--green);
+        font-style: normal;
+    }
+
+.lore-multiselect-arrow {
+    font-size: 0.7rem;
+    color: var(--green-dim);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.lore-multiselect-trigger[aria-expanded="true"] .lore-multiselect-arrow {
+    transform: rotate(180deg);
+}
+
+.lore-multiselect-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 150;
+    background: rgba(8, 18, 11, 0.98);
+    border: 1px solid rgba(61,255,143,0.35);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+}
+
+    .lore-multiselect-dropdown.hidden {
+        display: none !important;
+    }
+
+.lore-multiselect-option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    color: rgba(61,255,143,0.6);
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+}
+
+    .lore-multiselect-option:hover {
+        background: rgba(61,255,143,0.07);
+        color: var(--green);
+    }
+
+    .lore-multiselect-option input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border: 1px solid var(--green-border);
+        background: transparent;
+        flex-shrink: 0;
+        cursor: pointer;
+        position: relative;
+        transition: border-color 0.15s, background 0.15s;
+    }
+
+        .lore-multiselect-option input[type="checkbox"]:checked {
+            background: rgba(61,255,143,0.15);
+            border-color: var(--green-dim);
+        }
+
+            .lore-multiselect-option input[type="checkbox"]:checked::after {
+                content: '✓';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 0.6rem;
+                color: var(--green);
+                line-height: 1;
+            }
+
+    .lore-multiselect-option:has(input:checked) {
+        color: var(--green);
+    }
+
+.lore-ms-icon {
+    font-size: 0.85rem;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .lore-form-textarea {
