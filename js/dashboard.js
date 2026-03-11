@@ -111,6 +111,7 @@ function revealDashboard(user) {
         badge.textContent = "✦ Keeper ✦";
         profileRole.insertAdjacentElement("afterend", badge);
         document.getElementById("announceAddBtn").classList.remove("hidden");
+        document.getElementById("backupCard").classList.remove("hidden");
     }
 
     document.getElementById("editProfileBtn").addEventListener("click", openEditProfileModal);
@@ -967,4 +968,127 @@ function formatTime(date) {
 function formatJoinDate(timeStr) {
     if (!timeStr) return "—";
     return new Date(timeStr).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+// ── World Backup (Keepers only) ───────────────────────────────
+
+document.getElementById("backupBtn")?.addEventListener("click", runWorldBackup);
+
+async function runWorldBackup() {
+    if (!isKeeper) return;
+
+    const btn = document.getElementById("backupBtn");
+    const statusEl = document.getElementById("backupStatus");
+
+    btn.disabled = true;
+    btn.textContent = "Gathering records…";
+    statusEl.textContent = "";
+    statusEl.className = "backup-status";
+
+    try {
+        // ── Collections to snapshot ───────────────────────────
+        const COLLECTIONS = [
+            "lore",
+            "characters",
+            "factions",
+            "locations",
+            "updates",
+            "announcements",
+            "claims",
+            "changelog",
+            "users",
+        ];
+
+        const snapshot = {};
+
+        for (const col of COLLECTIONS) {
+            btn.textContent = `Reading ${col}…`;
+            try {
+                const snap = await getDocs(collection(db, col));
+                snapshot[col] = snap.docs.map(d => {
+                    const data = d.data();
+                    // Convert Firestore Timestamps → ISO strings so JSON serialises cleanly
+                    return { _id: d.id, ...normaliseTimestamps(data) };
+                });
+            } catch (err) {
+                // Some collections may not exist yet — skip gracefully
+                console.warn(`[backup] Skipping "${col}":`, err.message);
+                snapshot[col] = [];
+            }
+        }
+
+        // ── Build the file ────────────────────────────────────
+        const now = new Date();
+        const dateTag = now.toISOString().slice(0, 10);           // YYYY-MM-DD
+        const timeTag = now.toTimeString().slice(0, 8).replace(/:/g, "-"); // HH-MM-SS
+
+        const meta = {
+            exportedAt: now.toISOString(),
+            exportedBy: currentUser.displayName || currentUser.email,
+            exportedByUid: currentUser.uid,
+            worldName: "Alithia",
+            collections: Object.fromEntries(
+                Object.entries(snapshot).map(([k, v]) => [k, v.length])
+            ),
+        };
+
+        const output = { meta, ...snapshot };
+
+        // ── Serialise & trigger download ──────────────────────
+        btn.textContent = "Building file…";
+        const json = JSON.stringify(output, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `alithia-backup-${dateTag}-${timeTag}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // ── Success feedback ──────────────────────────────────
+        const totalRecords = Object.values(snapshot).reduce((s, arr) => s + arr.length, 0);
+        statusEl.textContent = `✦ Backup complete — ${totalRecords} records saved.`;
+        statusEl.className = "backup-status success";
+
+        // Log to changelog
+        await logChange("backup", `World backup downloaded by ${currentUser.displayName || currentUser.email}`, `${totalRecords} records across ${COLLECTIONS.length} collections`);
+
+    } catch (err) {
+        console.error("[backup] Failed:", err);
+        statusEl.textContent = "✕ Backup failed. Check console for details.";
+        statusEl.className = "backup-status error";
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="backup-icon">⬇</span> Download World Backup';
+}
+
+/**
+ * normaliseTimestamps(obj)
+ * Recursively converts Firestore Timestamp objects to ISO strings
+ * so they serialise predictably in JSON.
+ */
+function normaliseTimestamps(obj) {
+    if (obj === null || obj === undefined) return obj;
+
+    // Firestore Timestamp has a toDate() method
+    if (typeof obj.toDate === "function") {
+        return obj.toDate().toISOString();
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(normaliseTimestamps);
+    }
+
+    if (typeof obj === "object") {
+        const out = {};
+        for (const [k, v] of Object.entries(obj)) {
+            out[k] = normaliseTimestamps(v);
+        }
+        return out;
+    }
+
+    return obj;
 }
