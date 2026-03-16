@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Character Sheet — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/character-sheet.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger">
+        <span></span><span></span><span></span>
+    </div>
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="locations.html">LOCATIONS</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+        </ul>
+    </div>
+    <div class="page-transition"></div>
+
+    <!-- Auth guard -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <!-- Main sheet wrap -->
+    <div class="sheet-wrap hidden" id="sheetWrap">
+
+        <!-- ── Top bar ─────────────────────────────────────────── -->
+        <header class="sheet-topbar" id="sheetTopbar">
+            <div class="sheet-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Character Sheet</span>
+            </div>
+            <div class="sheet-topbar-center">
+                <!-- Character switcher -->
+                <div class="char-switcher" id="charSwitcher">
+                    <select class="char-select" id="charSelect">
+                        <option value="">— Select Character —</option>
+                    </select>
+                    <button class="char-new-btn" id="charNewBtn" title="New character">＋</button>
+                </div>
+            </div>
+            <div class="sheet-topbar-right">
+                <span class="topbar-username" id="topbarUsername">—</span>
+                <button class="sheet-save-btn" id="sheetSaveBtn">
+                    <span class="save-icon">✦</span>
+                    <span class="save-text">Save</span>
+                </button>
+                <button class="sheet-pdf-btn" id="sheetPdfBtn">
+                    <span>↓ PDF</span>
+                </button>
+                <button class="signout-btn" id="signOutBtn">Sign Out</button>
+            </div>
+        </header>
+
+        <!-- ── Tab nav ─────────────────────────────────────────── -->
+        <nav class="sheet-tabnav" id="sheetTabnav">
+            <button class="sheet-tab active" data-tab="stats">
+                <span class="tab-rune">ᚠ</span> Stats & Combat
+            </button>
+            <button class="sheet-tab" data-tab="character">
+                <span class="tab-rune">ᚢ</span> Character
+            </button>
+            <button class="sheet-tab" data-tab="systems">
+                <span class="tab-rune">ᚦ</span> Rot · Fate · Polarity
+            </button>
+        </nav>
+
+        <!-- ── Save status bar ────────────────────────────────── -->
+        <div class="save-status" id="saveStatus"></div>
+
+        <!-- ══════════════════════════════════════════════════════
+             TAB 1 — STATS & COMBAT
+        ══════════════════════════════════════════════════════════ -->
+        <section class="sheet-section active" id="tab-stats">
+            <div class="sheet-grid">
+
+                <!-- ── LEFT COL ── -->
+                <div class="sheet-left">
+
+                    <!-- Identity strip -->
+                    <div class="sheet-card identity-card">
+                        <div class="identity-row">
+                            <div class="identity-field wide">
+                                <label class="field-label">Character Name</label>
+                                <div class="field-input" contenteditable="true" data-field="charName" data-placeholder="Enter name…"></div>
+                            </div>
+                            <div class="identity-field">
+                                <label class="field-label">Pronouns</label>
+                                <div class="field-input" contenteditable="true" data-field="pronouns" data-placeholder="they/them"></div>
+                            </div>
+                            <div class="identity-field">
+                                <label class="field-label">Species</label>
+                                <div class="field-input" contenteditable="true" data-field="species" data-placeholder="—"></div>
+                            </div>
+                        </div>
+                        <div class="identity-row">
+                            <div class="identity-field wide">
+                                <label class="field-label">Player Name</label>
+                                <div class="field-input" contenteditable="true" data-field="playerName" data-placeholder="—"></div>
+                            </div>
+                            <div class="identity-field">
+                                <label class="field-label">Class / Level</label>
+                                <div class="field-input" contenteditable="true" data-field="classLevel" data-placeholder="—"></div>
+                            </div>
+                            <div class="identity-field">
+                                <label class="field-label">Origin</label>
+                                <div class="field-input" contenteditable="true" data-field="origin" data-placeholder="—"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats block -->
+                    <div class="stats-columns">
+
+                        <!-- Martial -->
+                        <div class="sheet-card stat-card">
+                            <div class="stat-category-header martial">
+                                <span class="cat-label">Martial</span>
+                            </div>
+                            <div class="stat-list">
+                                <div class="stat-row" data-stat="fortitude">
+                                    <span class="stat-name">Fortitude</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_fortitude" />
+                                </div>
+                                <div class="stat-row" data-stat="muscle">
+                                    <span class="stat-name">Muscle</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_muscle" />
+                                </div>
+                                <div class="stat-row" data-stat="swiftness">
+                                    <span class="stat-name">Swiftness</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_swiftness" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mind -->
+                        <div class="sheet-card stat-card">
+                            <div class="stat-category-header mind">
+                                <span class="cat-label">Mind</span>
+                            </div>
+                            <div class="stat-list">
+                                <div class="stat-row" data-stat="keeness">
+                                    <span class="stat-name">Keeness</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_keeness" />
+                                </div>
+                                <div class="stat-row" data-stat="wisdom">
+                                    <span class="stat-name">Wisdom</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_wisdom" />
+                                </div>
+                                <div class="stat-row" data-stat="charm">
+                                    <span class="stat-name">Charm</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_charm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Magic -->
+                        <div class="sheet-card stat-card">
+                            <div class="stat-category-header magic">
+                                <span class="cat-label">Magic</span>
+                            </div>
+                            <div class="stat-list">
+                                <div class="stat-row" data-stat="faith">
+                                    <span class="stat-name">Faith</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_faith" />
+                                </div>
+                                <div class="stat-row" data-stat="self">
+                                    <span class="stat-name">Self</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_self" />
+                                </div>
+                                <div class="stat-row" data-stat="lore">
+                                    <span class="stat-name">Lore</span>
+                                    <input class="stat-val" type="number" min="0" max="99" value="0" data-field="stat_lore" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Derived stats -->
+                        <div class="sheet-card stat-card derived-card">
+                            <div class="stat-category-header derived">
+                                <span class="cat-label">Derived</span>
+                            </div>
+                            <div class="stat-list">
+                                <div class="stat-row derived-row">
+                                    <span class="stat-name">Vitality</span>
+                                    <span class="stat-derived" id="derivedVitality" title="Fortitude + Muscle">—</span>
+                                    <!-- TODO: add Vitality stat input when ready -->
+                                </div>
+                                <div class="stat-row derived-row">
+                                    <span class="stat-name">Tenacity</span>
+                                    <span class="stat-derived" id="derivedTenacity" title="Self + Charm">—</span>
+                                    <!-- TODO: add Tenacity stat input when ready -->
+                                </div>
+                                <div class="stat-row derived-row">
+                                    <span class="stat-name">Soul</span>
+                                    <span class="stat-derived" id="derivedSoul" title="Faith + Wisdom">—</span>
+                                    <!-- TODO: add Soul stat input when ready -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /stats-columns -->
+                    <!-- Skills -->
+                    <div class="sheet-card skills-card">
+                        <div class="skills-header">
+                            <span class="section-label">Skills</span>
+                            <span class="skills-hint">Base | Bonus</span>
+                        </div>
+
+                        <div class="skills-grid">
+                            <!-- Martial skills -->
+                            <div class="skill-group">
+                                <div class="skill-group-label martial">Martial</div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Acrobatics</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_acrobatics_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_acrobatics_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Athletics</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_athletics_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_athletics_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Climb</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_climb_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_climb_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Sleight of Hand</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_sleight_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_sleight_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Stealth</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_stealth_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_stealth_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mind skills -->
+                            <div class="skill-group">
+                                <div class="skill-group-label mind">Mind</div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Deception</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_deception_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_deception_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Insight</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_insight_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_insight_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Influence</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_influence_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_influence_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Investigate</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_investigate_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_investigate_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Perception</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_perception_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_perception_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Performance</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_performance_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_performance_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Survival</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_survival_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_survival_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Magic skills -->
+                            <div class="skill-group">
+                                <div class="skill-group-label magic">Magic</div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Channel</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_channel_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_channel_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Meditate</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_meditate_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_meditate_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                                <div class="skill-row">
+                                    <span class="skill-name">Sense</span>
+                                    <div class="skill-inputs">
+                                        <input class="skill-val" type="number" min="0" data-field="skill_sense_base" placeholder="0" />
+                                        <span class="skill-pipe">|</span>
+                                        <input class="skill-val" type="number" min="0" data-field="skill_sense_bonus" placeholder="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /sheet-left -->
+                <!-- ── RIGHT COL ── -->
+                <div class="sheet-right">
+
+                    <!-- Current Status -->
+                    <div class="sheet-card status-card">
+                        <div class="section-header-row">
+                            <span class="section-label">Current Status</span>
+                        </div>
+
+                        <!-- Health -->
+                        <div class="status-block">
+                            <div class="status-main-row">
+                                <span class="status-name">Health</span>
+                                <div class="status-hp-display">
+                                    <span class="status-calc" id="calcHealth">—</span>
+                                    <span class="status-sep">/</span>
+                                    <span class="status-max" id="maxHealth">—</span>
+                                </div>
+                                <input class="status-current" type="number" min="0" id="currentHealth" data-field="current_health" placeholder="HP" title="Current HP" />
+                            </div>
+                            <div class="wound-thresholds">
+                                <span class="wt-label">Wound Thresholds:</span>
+                                <span class="wt-item">Minor ≤</span>
+                                <input class="wt-input" type="number" min="0" data-field="wound_threshold_1" placeholder="—" title="First wound threshold" />
+                                <span class="wt-item">Moderate ≤</span>
+                                <input class="wt-input" type="number" min="0" data-field="wound_threshold_2" placeholder="—" title="Second wound threshold" />
+                            </div>
+
+                            <!-- Health state indicator -->
+                            <div class="health-states" id="healthStates">
+                                <div class="hs-bar">
+                                    <div class="hs-seg healthy active" data-state="healthy" title="100% — Healthy">
+                                        <span>Healthy</span>
+                                    </div>
+                                    <div class="hs-seg injured" data-state="injured" title="75% — Injured">
+                                        <span>Injured</span>
+                                    </div>
+                                    <div class="hs-seg bloodied" data-state="bloodied" title="50% — Bloodied">
+                                        <span>Bloodied</span>
+                                    </div>
+                                    <div class="hs-seg critical" data-state="critical" title="25% — Critical">
+                                        <span>Critical</span>
+                                    </div>
+                                    <div class="hs-seg dying" data-state="dying" title="0% — Dying">
+                                        <span>Dying</span>
+                                    </div>
+                                </div>
+                                <!-- Active state effect tooltip -->
+                                <div class="hs-effect" id="hsEffect"></div>
+                            </div>
+                        </div>
+
+                        <!-- Morale -->
+                        <div class="status-block">
+                            <div class="status-main-row">
+                                <span class="status-name">Morale</span>
+                                <div class="status-hp-display">
+                                    <span class="status-calc" id="calcMorale">—</span>
+                                    <span class="status-sep">/</span>
+                                    <span class="status-max" id="maxMorale">—</span>
+                                </div>
+                                <input class="status-current" type="number" min="0" id="currentMorale" data-field="current_morale" placeholder="MP" title="Current Morale" />
+                            </div>
+                            <!-- TODO: Morale states when designed -->
+                        </div>
+
+                        <!-- Sanity -->
+                        <div class="status-block">
+                            <div class="status-main-row">
+                                <span class="status-name">Sanity</span>
+                                <div class="status-hp-display">
+                                    <span class="status-calc" id="calcSanity">—</span>
+                                    <span class="status-sep">/</span>
+                                    <span class="status-max" id="maxSanity">—</span>
+                                </div>
+                                <input class="status-current" type="number" min="0" id="currentSanity" data-field="current_sanity" placeholder="SP" title="Current Sanity" />
+                            </div>
+                            <!-- TODO: Sanity states when designed -->
+                        </div>
+                    </div>
+
+                    <!-- Protection -->
+                    <div class="sheet-card protection-card">
+                        <div class="section-header-row">
+                            <span class="section-label">Protection</span>
+                        </div>
+                        <div class="prot-grid">
+                            <div class="prot-row">
+                                <span class="prot-name">Physical</span>
+                                <span class="prot-sub">Worn &amp; natural armor</span>
+                                <input class="prot-val" type="number" min="0" data-field="prot_physical" placeholder="0" />
+                            </div>
+                            <div class="prot-row">
+                                <span class="prot-name">Magical</span>
+                                <span class="prot-sub">Enchantments &amp; wards</span>
+                                <input class="prot-val" type="number" min="0" data-field="prot_magical" placeholder="0" />
+                            </div>
+                            <div class="prot-row derived-prot">
+                                <span class="prot-name">Evasion</span>
+                                <span class="prot-sub">Swiftness + Keeness</span>
+                                <span class="prot-calc" id="calcEvasion">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resilience -->
+                    <div class="sheet-card resilience-card">
+                        <div class="section-header-row">
+                            <span class="section-label">Resilience</span>
+                        </div>
+                        <div class="res-grid">
+                            <div class="res-row">
+                                <span class="res-name">Vitality</span>
+                                <span class="res-formula">Fortitude + Muscle</span>
+                                <span class="res-val" id="resVitality">—</span>
+                            </div>
+                            <div class="res-row">
+                                <span class="res-name">Tenacity</span>
+                                <span class="res-formula">Self + Charm</span>
+                                <span class="res-val" id="resTenacity">—</span>
+                            </div>
+                            <div class="res-row">
+                                <span class="res-name">Soul</span>
+                                <span class="res-formula">Faith + Wisdom</span>
+                                <span class="res-val" id="resSoul">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="sheet-card actions-card">
+                        <div class="section-header-row">
+                            <span class="section-label">Actions</span>
+                        </div>
+                        <div class="action-row">
+                            <span class="action-label">Weapon</span>
+                            <span class="action-sub">Primary stat, possible secondary</span>
+                            <div class="action-input" contenteditable="true" data-field="action_weapon" data-placeholder="Weapon name, stat…"></div>
+                        </div>
+                        <div class="action-row">
+                            <span class="action-label">Spell</span>
+                            <span class="action-sub">Primary stat</span>
+                            <div class="action-input" contenteditable="true" data-field="action_spell" data-placeholder="Spell name, stat…"></div>
+                        </div>
+                        <div class="action-row">
+                            <span class="action-label">Other</span>
+                            <span class="action-sub">Other kinds of actions</span>
+                            <div class="action-input" contenteditable="true" data-field="action_other" data-placeholder="Other actions…"></div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment -->
+                    <div class="sheet-card equipment-card">
+                        <div class="section-header-row">
+                            <span class="section-label">Equipment</span>
+                        </div>
+                        <div class="equipment-area" contenteditable="true" data-field="equipment" data-placeholder="List your equipment, items, and gear…"></div>
+                    </div>
+
+                    <!-- Spells placeholder -->
+                    <div class="sheet-card spells-card">
+                        <div class="section-header-row">
+                            <span class="section-label">Spells</span>
+                            <span class="coming-soon-badge">Coming Soon</span>
+                        </div>
+                        <div class="coming-soon-block">
+                            <span class="coming-rune" aria-hidden="true">ᚲ</span>
+                            <p>The arcane registry is still being inscribed.<br />This section will be available in a future update.</p>
+                        </div>
+                    </div>
+
+                </div><!-- /sheet-right -->
+            </div><!-- /sheet-grid -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             TAB 2 — CHARACTER
+        ══════════════════════════════════════════════════════════ -->
+        <section class="sheet-section" id="tab-character">
+            <div class="char-grid">
+
+                <div class="sheet-card char-features-card">
+                    <div class="section-header-row">
+                        <span class="section-label">Class Features</span>
+                    </div>
+                    <div class="big-text-area" contenteditable="true" data-field="class_features" data-placeholder="List your class features and abilities…"></div>
+                </div>
+
+                <div class="sheet-card char-traits-card">
+                    <div class="section-header-row">
+                        <span class="section-label">Species / Origin Traits</span>
+                    </div>
+                    <div class="big-text-area" contenteditable="true" data-field="species_traits" data-placeholder="Your species and origin traits…"></div>
+                </div>
+
+                <div class="sheet-card char-contacts-card">
+                    <div class="section-header-row">
+                        <span class="section-label">Contacts</span>
+                        <span class="field-sub">NPC Relationships</span>
+                    </div>
+                    <div class="contacts-list" id="contactsList"></div>
+                    <button class="add-contact-btn" id="addContactBtn">＋ Add Contact</button>
+                </div>
+
+                <div class="sheet-card char-backstory-card">
+                    <div class="section-header-row">
+                        <span class="section-label">Backstory</span>
+                    </div>
+                    <div class="backstory-area" contenteditable="true" data-field="backstory" data-placeholder="Write your character's backstory…"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             TAB 3 — ROT · FATE · POLARITY
+        ══════════════════════════════════════════════════════════ -->
+        <section class="sheet-section" id="tab-systems">
+            <div class="systems-grid">
+
+                <!-- ROT SYSTEM -->
+                <div class="sheet-card rot-card">
+                    <div class="section-header-row">
+                        <span class="section-label rot-label">ᚱ Rot System</span>
+                        <span class="sys-badge manual-badge">Manual Tracking</span>
+                    </div>
+
+                    <div class="rot-grid">
+                        <div class="rot-field">
+                            <label class="field-label">Fated Slot</label>
+                            <div class="field-input" contenteditable="true" data-field="rot_fated_slot" data-placeholder="Storyteller assigns…"></div>
+                        </div>
+                        <div class="rot-field">
+                            <label class="field-label">Alignment Status</label>
+                            <select class="rot-select" data-field="rot_status">
+                                <option value="on_path">On Path</option>
+                                <option value="off_path">Off Path</option>
+                                <option value="aligned">Aligned</option>
+                                <option value="penalty">Off Path — Penalty</option>
+                            </select>
+                        </div>
+                        <div class="rot-field">
+                            <label class="field-label">Attempts Used (this cycle)</label>
+                            <div class="attempt-dots">
+                                <button class="attempt-dot" data-attempt="1" title="Attempt 1"></button>
+                                <button class="attempt-dot" data-attempt="2" title="Attempt 2"></button>
+                                <button class="attempt-dot" data-attempt="3" title="Attempt 3"></button>
+                            </div>
+                        </div>
+                        <div class="rot-field">
+                            <label class="field-label">Cycle Number</label>
+                            <input class="rot-input" type="number" min="1" value="1" data-field="rot_cycle" />
+                        </div>
+                        <div class="rot-field">
+                            <label class="field-label">Rot Points Lost</label>
+                            <input class="rot-input" type="number" min="0" value="0" data-field="rot_points_lost" />
+                        </div>
+                        <div class="rot-field">
+                            <label class="field-label">Stat Affected</label>
+                            <select class="rot-select" data-field="rot_stat_affected">
+                                <option value="">— None —</option>
+                                <option value="fortitude">Fortitude</option>
+                                <option value="muscle">Muscle</option>
+                                <option value="swiftness">Swiftness</option>
+                                <option value="keeness">Keeness</option>
+                                <option value="wisdom">Wisdom</option>
+                                <option value="charm">Charm</option>
+                                <option value="faith">Faith</option>
+                                <option value="self">Self</option>
+                                <option value="lore">Lore</option>
+                                <option value="health">Health / HP</option>
+                                <option value="mana">Mana / MP</option>
+                                <option value="luck">Luck</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="rot-notes">
+                        <label class="field-label">Notes</label>
+                        <div class="field-input" contenteditable="true" data-field="rot_notes" data-placeholder="Session notes on rot activity…"></div>
+                    </div>
+                </div>
+
+                <!-- FATE SYSTEM -->
+                <div class="sheet-card fate-card">
+                    <div class="section-header-row">
+                        <span class="section-label fate-label">ᚠ Fate System</span>
+                        <span class="sys-badge auto-badge">Auto Tracking</span>
+                    </div>
+
+                    <div class="fate-points-display">
+                        <label class="field-label">Fate Points</label>
+                        <div class="fp-control">
+                            <button class="fp-btn" id="fpMinus">−</button>
+                            <input class="fp-input" type="number" min="0" max="99" value="0" id="fatePointsInput" data-field="fate_points" />
+                            <button class="fp-btn" id="fpPlus">＋</button>
+                        </div>
+                        <span class="fp-hint">Earned each in-game rest</span>
+                    </div>
+
+                    <!-- Fate die tier display -->
+                    <div class="fate-tiers" id="fateTiers">
+                        <div class="fate-tiers-label">Fate Die Reference (d10)</div>
+                        <div class="fate-tier-row crit-fail">
+                            <span class="ft-roll">1</span>
+                            <span class="ft-name">Critical Failure</span>
+                            <span class="ft-desc">Fate turns sharply against you</span>
+                        </div>
+                        <div class="fate-tier-row fail">
+                            <span class="ft-roll">2–4</span>
+                            <span class="ft-name">Failure</span>
+                            <span class="ft-desc">The attempt falls flat</span>
+                        </div>
+                        <div class="fate-tier-row partial">
+                            <span class="ft-roll">5–7</span>
+                            <span class="ft-name">Partial Success</span>
+                            <span class="ft-desc">Fate bends, but not cleanly</span>
+                        </div>
+                        <div class="fate-tier-row success">
+                            <span class="ft-roll">8–9</span>
+                            <span class="ft-name">Success</span>
+                            <span class="ft-desc">The narrative shifts in your favor</span>
+                        </div>
+                        <div class="fate-tier-row crit-success">
+                            <span class="ft-roll">10</span>
+                            <span class="ft-name">Critical Success</span>
+                            <span class="ft-desc">Fate delivers something remarkable</span>
+                        </div>
+                    </div>
+
+                    <div class="fate-thread">
+                        <label class="field-label">Thread Status</label>
+                        <div class="thread-bar" id="threadBar">
+                            <div class="thread-seg intact active" data-thread="intact">Intact</div>
+                            <div class="thread-seg fraying" data-thread="fraying">Fraying</div>
+                            <div class="thread-seg damaged" data-thread="damaged">Damaged</div>
+                            <div class="thread-seg severed" data-thread="severed">Severed</div>
+                        </div>
+                        <select class="rot-select" data-field="fate_thread_status" id="fateThreadSelect">
+                            <option value="intact">Intact</option>
+                            <option value="fraying">Fraying</option>
+                            <option value="damaged">Damaged</option>
+                            <option value="severed">Severed</option>
+                        </select>
+                    </div>
+
+                    <div class="fate-slot-display">
+                        <label class="field-label">Fated Slot</label>
+                        <div class="field-input" contenteditable="true" data-field="fate_slot" data-placeholder="Assigned by Storyteller after stat boost selection…"></div>
+                    </div>
+                </div>
+
+                <!-- POLARITY SYSTEM -->
+                <div class="sheet-card polarity-card">
+                    <div class="section-header-row">
+                        <span class="section-label polarity-label">⊕ Polarity System</span>
+                        <span class="sys-badge auto-badge">Auto Tracking</span>
+                    </div>
+
+                    <!-- Polarity number input -->
+                    <div class="polarity-input-row">
+                        <label class="field-label">Current Polarity</label>
+                        <div class="pol-control">
+                            <button class="pol-btn neg" id="polMinus">−</button>
+                            <input class="pol-input" type="number" min="-20" max="20" value="0"
+                                   id="polarityInput" data-field="polarity" />
+                            <button class="pol-btn pos" id="polPlus">＋</button>
+                        </div>
+                    </div>
+
+                    <!-- Polarity slider visual -->
+                    <div class="polarity-slider-wrap">
+                        <div class="pol-axis-labels">
+                            <span class="pol-axis-neg">−20 Xenderon</span>
+                            <span class="pol-axis-zero">0</span>
+                            <span class="pol-axis-pos">Vyomi +20</span>
+                        </div>
+                        <div class="polarity-track" id="polarityTrack">
+                            <div class="pol-fill-neg" id="polFillNeg"></div>
+                            <div class="pol-zero-marker"></div>
+                            <div class="pol-fill-pos" id="polFillPos"></div>
+                        </div>
+                        <div class="pol-tick-row" aria-hidden="true">
+                            <span>−20</span><span>−15</span><span>−10</span><span>−5</span>
+                            <span class="pol-tick-zero">0</span>
+                            <span>+5</span><span>+10</span><span>+15</span><span>+20</span>
+                        </div>
+                    </div>
+
+                    <!-- Band display -->
+                    <div class="polarity-band-display" id="polarityBandDisplay">
+                        <span class="band-label" id="polarityBandLabel">NEUTRAL</span>
+                        <span class="band-desc" id="polarityBandDesc">No buffs or debuffs active. The world is watching.</span>
+                    </div>
+
+                    <!-- Polarity band scale -->
+                    <div class="polarity-scale">
+                        <div class="pol-scale-label">Scale</div>
+                        <div class="pol-bands">
+                            <div class="pol-band xenderon-threshold" id="band--20">
+                                <span class="pb-range">−20</span>
+                                <span class="pb-name">Xenderon Threshold</span>
+                                <span class="pb-dot" id="dot--20"></span>
+                            </div>
+                            <div class="pol-band abyss" id="band-abyss">
+                                <span class="pb-range">−13 to −19</span>
+                                <span class="pb-name">Abyss</span>
+                                <span class="pb-dot" id="dot-abyss"></span>
+                            </div>
+                            <div class="pol-band deep-neg" id="band-deep-neg">
+                                <span class="pb-range">−7 to −12</span>
+                                <span class="pb-name">Deep Negative</span>
+                                <span class="pb-dot" id="dot-deep-neg"></span>
+                            </div>
+                            <div class="pol-band negative" id="band-negative">
+                                <span class="pb-range">−1 to −6</span>
+                                <span class="pb-name">Negative</span>
+                                <span class="pb-dot" id="dot-negative"></span>
+                            </div>
+                            <div class="pol-band neutral active-band" id="band-neutral">
+                                <span class="pb-range">0</span>
+                                <span class="pb-name">Neutral</span>
+                                <span class="pb-dot" id="dot-neutral"></span>
+                            </div>
+                            <div class="pol-band positive" id="band-positive">
+                                <span class="pb-range">+1 to +6</span>
+                                <span class="pb-name">Positive</span>
+                                <span class="pb-dot" id="dot-positive"></span>
+                            </div>
+                            <div class="pol-band deep-pos" id="band-deep-pos">
+                                <span class="pb-range">+7 to +12</span>
+                                <span class="pb-name">Deep Positive</span>
+                                <span class="pb-dot" id="dot-deep-pos"></span>
+                            </div>
+                            <div class="pol-band grace" id="band-grace">
+                                <span class="pb-range">+13 to +19</span>
+                                <span class="pb-name">Grace</span>
+                                <span class="pb-dot" id="dot-grace"></span>
+                            </div>
+                            <div class="pol-band vyomi-threshold" id="band-+20">
+                                <span class="pb-range">+20</span>
+                                <span class="pb-name">Vyomi Threshold</span>
+                                <span class="pb-dot" id="dot-+20"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /polarity-card -->
+
+            </div><!-- /systems-grid -->
+        </section>
+
+    </div><!-- /sheet-wrap -->
+    <!-- ── New Character Modal ────────────────────────────────── -->
+    <div class="modal-backdrop hidden" id="newCharModalBackdrop">
+        <div class="modal-box">
+            <button class="modal-close" id="newCharModalClose">✕</button>
+            <div class="modal-title">New Character</div>
+            <p class="modal-hint">Give your character a name to begin.</p>
+            <div class="modal-form">
+                <label class="modal-label">Character Name</label>
+                <input type="text" class="modal-input" id="newCharNameInput"
+                       placeholder="Enter character name…" maxlength="60" />
+                <div class="form-message" id="newCharMsg"></div>
+                <button class="post-btn" id="newCharCreateBtn" style="width:100%;margin-top:0.75rem">
+                    Create Character
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         DICE ROLLER — persistent bottom bar
+    ══════════════════════════════════════════════════════════ -->
+    <div class="dice-bar" id="diceBar">
+
+        <div class="dice-bar-left">
+            <span class="dice-bar-title">
+                <span class="dice-rune" aria-hidden="true">⚄</span>
+                d10 Pool
+            </span>
+            <div class="dice-count-control">
+                <button class="dice-count-btn" id="diceCountMinus" title="Fewer dice">−</button>
+                <span class="dice-count-display" id="diceCountDisplay">1</span>
+                <button class="dice-count-btn" id="diceCountPlus" title="More dice">＋</button>
+                <span class="dice-count-label">dice</span>
+            </div>
+            <button class="dice-roll-btn" id="diceRollBtn">
+                <span class="dice-roll-text">Roll</span>
+            </button>
+        </div>
+
+        <div class="dice-bar-results" id="diceBarResults">
+            <div class="dice-results-empty" id="diceResultsEmpty">
+                Roll the dice to see results…
+            </div>
+            <div class="dice-results-dice" id="diceResultsDice"></div>
+        </div>
+
+        <div class="dice-bar-summary hidden" id="diceBarSummary">
+            <div class="dice-summary-block">
+                <span class="summary-label">Total</span>
+                <span class="summary-val total-val" id="diceSumTotal">—</span>
+            </div>
+            <div class="dice-summary-sep"></div>
+            <div class="dice-summary-block">
+                <span class="summary-label">Passes</span>
+                <span class="summary-val pass-val" id="diceSumPasses">—</span>
+            </div>
+            <div class="dice-summary-sep"></div>
+            <div class="dice-summary-block">
+                <span class="summary-label">Result</span>
+                <span class="summary-result" id="diceSumResult">—</span>
+            </div>
+        </div>
+
+        <button class="dice-bar-toggle" id="diceBarToggle" title="Collapse/expand roller">
+            <span id="diceToggleIcon">▼</span>
+        </button>
+
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/character-sheet.js"></script>
+</body>
+</html>
