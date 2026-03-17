@@ -10,7 +10,7 @@ import { auth, db } from "../auth/firebase-config.js";
 import { onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-    collection, doc, getDoc, getDocs, query, orderBy, collectionGroup
+    collection, doc, getDoc, getDocs, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Particle canvas ──────────────────────────────────────────
@@ -109,21 +109,37 @@ async function loadPool() {
             };
         });
 
-        // 2. Load all character sheets via collectionGroup
-        const sheetsSnap = await getDocs(
-            query(collectionGroup(db, "sheets"), orderBy("updatedAt", "desc"))
-        );
-
+        // 2. Load all character sheets — fetch each user's subcollection individually
+        //    (avoids collectionGroup index requirement)
         allCharacters = [];
-        sheetsSnap.forEach(d => {
-            // Extract uid from path: character-sheets/{uid}/sheets/{sheetId}
-            const pathParts = d.ref.path.split("/");
-            const ownerUid = pathParts[1];
-            allCharacters.push({
-                id: d.id,
-                ownerUid,
-                ...d.data(),
-            });
+
+        const playerUidList = Object.keys(allPlayers);
+        await Promise.all(playerUidList.map(async (uid) => {
+            try {
+                const userSheetsSnap = await getDocs(
+                    query(
+                        collection(db, "character-sheets", uid, "sheets"),
+                        orderBy("updatedAt", "desc")
+                    )
+                );
+                userSheetsSnap.forEach(d => {
+                    allCharacters.push({
+                        id: d.id,
+                        ownerUid: uid,
+                        ...d.data(),
+                    });
+                });
+            } catch (err) {
+                // User may have no sheets yet — non-fatal
+                console.log(`No sheets for ${uid}:`, err.message);
+            }
+        }));
+
+        // Sort all characters by updatedAt descending
+        allCharacters.sort((a, b) => {
+            const aTime = a.updatedAt?.toMillis?.() || 0;
+            const bTime = b.updatedAt?.toMillis?.() || 0;
+            return bTime - aTime;
         });
 
         // Stats
