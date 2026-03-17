@@ -63,29 +63,50 @@ const drawerOpenBtn = document.getElementById("drawerOpenBtn");
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         sessionStorage.setItem("alithia_redirect", window.location.href);
-        window.location.href = "login.html"; return;
+        window.location.href = "login.html";
+        return;
     }
-    currentUser = user;
 
-    // Check isStoryteller boolean field
+    currentUser = user;
+    topbarUsername.textContent = user.displayName || user.email;
+
     let canAccess = false;
+
     try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
-        if (userSnap.exists()) canAccess = userSnap.data().isStoryteller === true;
-    } catch (_) { }
+
+        if (!userSnap.exists()) {
+            throw new Error("User doc missing");
+        }
+
+        canAccess = userSnap.data().isStoryteller === true;
+
+    } catch (err) {
+        console.error("Access check failed:", err);
+
+        // 🔥 Don't proceed if role check fails
+        authGuard.classList.add("fade-out");
+        setTimeout(() => { authGuard.style.display = "none"; }, 500);
+
+        accessDenied.classList.remove("hidden");
+        return;
+    }
 
     authGuard.classList.add("fade-out");
     setTimeout(() => { authGuard.style.display = "none"; }, 500);
 
     if (!canAccess) {
-        // Show access denied, not the pool
         accessDenied.classList.remove("hidden");
         return;
     }
 
-    topbarUsername.textContent = user.displayName || user.email;
     poolWrap.classList.remove("hidden");
-    await loadPool();
+
+    try {
+        await loadPool();
+    } catch (err) {
+        console.error("Pool load failed:", err);
+    }
 });
 
 signOutBtn?.addEventListener("click", async () => {

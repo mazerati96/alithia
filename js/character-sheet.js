@@ -67,37 +67,69 @@ const newCharCreate = document.getElementById("newCharCreateBtn");
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         sessionStorage.setItem("alithia_redirect", window.location.href);
-        window.location.href = "login.html"; return;
+        window.location.href = "login.html";
+        return;
     }
+
     currentUser = user;
     topbarUsername.textContent = user.displayName || user.email;
 
-    // Check if this is a storyteller viewing someone else's sheet via URL params
     const params = new URLSearchParams(window.location.search);
     const paramUid = params.get("uid");
     const paramSheet = params.get("sheet");
 
-    // Check isStoryteller boolean field
     let isStUser = false;
+
     try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
-        if (userSnap.exists()) isStUser = userSnap.data().isStoryteller === true;
-    } catch (_) { }
+        if (userSnap.exists()) {
+            isStUser = userSnap.data().isStoryteller === true;
+        }
+    } catch (err) {
+        console.error("Role fetch failed:", err);
+    }
 
-    if (paramUid && paramSheet && isStUser) {
-        // Storyteller viewing a specific player's sheet
+    // 🔥 CRITICAL FIX: If params exist, DO NOT silently fallback
+    if (paramUid && paramSheet) {
+        if (!isStUser) {
+            console.warn("Non-storyteller tried to access storyteller view");
+            window.location.href = "storyteller-pool.html";
+            return;
+        }
+
+        // ✅ Storyteller mode
         isStoryteller = true;
         viewingUid = paramUid;
-        authGuard.classList.add("fade-out");
-        setTimeout(() => { authGuard.style.display = "none"; sheetWrap.classList.remove("hidden"); }, 500);
-        await loadStorytellerView(paramUid, paramSheet);
-    } else {
-        // Normal player view
-        authGuard.classList.add("fade-out");
-        setTimeout(() => { authGuard.style.display = "none"; sheetWrap.classList.remove("hidden"); }, 500);
+
+        showSheetUI();
+
+        try {
+            await loadStorytellerView(paramUid, paramSheet);
+        } catch (err) {
+            console.error("Storyteller load failed:", err);
+        }
+
+        return; // 🚫 prevent fallback
+    }
+
+    // ✅ Normal player mode
+    showSheetUI();
+
+    try {
         await loadCharacterList();
+    } catch (err) {
+        console.error("Character list load failed:", err);
     }
 });
+
+// helper
+function showSheetUI() {
+    authGuard.classList.add("fade-out");
+    setTimeout(() => {
+        authGuard.style.display = "none";
+        sheetWrap.classList.remove("hidden");
+    }, 500);
+}
 
 signOutBtn.addEventListener("click", async () => {
     await signOut(auth); window.location.href = "login.html";
