@@ -98,8 +98,8 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // ✅ Storyteller mode
-        isStoryteller = true;
-        viewingUid = paramUid;
+        isStoryteller == true;
+        viewingUid == paramUid;
 
         showSheetUI();
 
