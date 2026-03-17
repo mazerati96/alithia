@@ -46,6 +46,8 @@ let currentSheetId = null;  // Firestore doc ID for active sheet
 let sheetData = {};     // live data object
 let saveTimeout = null;
 let isDirty = false;
+let isStoryteller = false;
+let viewingUid = null;
 
 // ── DOM refs ─────────────────────────────────────────────────
 const authGuard = document.getElementById("authGuard");
@@ -98,8 +100,8 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // ✅ Storyteller mode
-        isStoryteller == true;
-        viewingUid == paramUid;
+        isStoryteller = true;
+        viewingUid = paramUid;
 
         showSheetUI();
 
