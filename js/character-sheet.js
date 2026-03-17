@@ -184,7 +184,7 @@ async function loadStorytellerView(ownerUid, sheetId) {
         // Add a visible read-only banner
         const banner = document.createElement("div");
         banner.style.cssText = `
-            position:fixed;top:var(--topbar-h, 74px );left:0;right:0;z-index:77; 
+            position:fixed; top:calc(var(--topbar-h) + var(--tabnav-h)); left:0;right:0;z-index:77;
             background:rgba(255,215,0,0.08);border-bottom:1px solid rgba(255,215,0,0.25);
             padding:0.4rem 1.25rem;display:flex;align-items:center;gap:0.75rem;
             font-family:var(--font-display);font-size:0.45rem;letter-spacing:0.2em;
