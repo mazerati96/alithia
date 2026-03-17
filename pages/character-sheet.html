@@ -378,40 +378,22 @@
 
                         <!-- Health -->
                         <div class="status-block">
-
-                            <!-- Max HP row — auto-calculated from stats -->
                             <div class="status-main-row">
                                 <span class="status-name">Health</span>
-                                <div class="status-hp-label-group">
-                                    <span class="status-hp-sub">Max HP</span>
+                                <div class="status-hp-display">
                                     <span class="status-calc" id="calcHealth">—</span>
-                                    <span class="status-hp-formula">(1 + Vitality÷2)</span>
+                                    <span class="status-sep">/</span>
+                                    <span class="status-max" id="maxHealth">—</span>
                                 </div>
+                                <input class="status-current" type="number" min="0" id="currentHealth" data-field="current_health" placeholder="HP" title="Current HP" />
                             </div>
-
-                            <!-- Current HP stepper row -->
-                            <div class="hp-stepper-row">
-                                <span class="hp-stepper-label">Current HP</span>
-                                <div class="hp-stepper">
-                                    <button class="hp-step-btn hp-minus" id="hpMinus" title="−1 HP">−</button>
-                                    <input class="hp-stepper-input" type="number"
-                                           id="currentHealth" data-field="current_health"
-                                           placeholder="0" title="Current HP" />
-                                    <button class="hp-step-btn hp-plus" id="hpPlus" title="+1 HP">＋</button>
-                                </div>
-                                <span class="hp-max-label">/ <span id="maxHealth">—</span></span>
-                            </div>
-
-                            <!-- Quick damage buttons -->
                             <div class="damage-btns">
-                                <span class="damage-btns-label">Quick:</span>
+                                <span class="damage-btns-label">Quick Damage:</span>
                                 <button class="dmg-btn minor" data-dmg="1" title="Minor Wound −1 HP">−1 Minor</button>
                                 <button class="dmg-btn moderate" data-dmg="2" title="Moderate Wound −2 HP">−2 Moderate</button>
                                 <button class="dmg-btn severe" data-dmg="3" title="Severe Wound −3 HP">−3 Severe</button>
                                 <button class="dmg-btn heal" data-heal="1" title="Heal +1 HP">+1 Heal</button>
                             </div>
-
-                            <!-- Wound thresholds -->
                             <div class="wound-thresholds">
                                 <span class="wt-label">Wound Thresholds:</span>
                                 <span class="wt-item">Minor ≤</span>
@@ -420,26 +402,26 @@
                                 <input class="wt-input" type="number" min="0" data-field="wound_threshold_2" placeholder="—" title="Second wound threshold" />
                             </div>
 
-                            <!-- Health state bar — clickable, player sets manually -->
+                            <!-- Health state indicator -->
                             <div class="health-states" id="healthStates">
-                                <div class="hs-bar-label">Health State <span class="hs-bar-hint">(click to set)</span></div>
                                 <div class="hs-bar">
-                                    <div class="hs-seg healthy active" data-state="healthy" title="Healthy — click to set">
+                                    <div class="hs-seg healthy active" data-state="healthy" title="100% — Healthy">
                                         <span>Healthy</span>
                                     </div>
-                                    <div class="hs-seg injured" data-state="injured" title="Injured — click to set">
+                                    <div class="hs-seg injured" data-state="injured" title="75% — Injured">
                                         <span>Injured</span>
                                     </div>
-                                    <div class="hs-seg bloodied" data-state="bloodied" title="Bloodied — click to set">
+                                    <div class="hs-seg bloodied" data-state="bloodied" title="50% — Bloodied">
                                         <span>Bloodied</span>
                                     </div>
-                                    <div class="hs-seg critical" data-state="critical" title="Critical — click to set">
+                                    <div class="hs-seg critical" data-state="critical" title="25% — Critical">
                                         <span>Critical</span>
                                     </div>
-                                    <div class="hs-seg dying" data-state="dying" title="Dying — click to set">
+                                    <div class="hs-seg dying" data-state="dying" title="0% — Dying">
                                         <span>Dying</span>
                                     </div>
                                 </div>
+                                <!-- Active state effect tooltip -->
                                 <div class="hs-effect" id="hsEffect"></div>
                             </div>
                         </div>

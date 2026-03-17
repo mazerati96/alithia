@@ -133,6 +133,7 @@ async function loadSheet(id) {
         sessionStorage.setItem("alithia_last_sheet", id);
         sheetData = snap.data();
         populateSheet(sheetData);
+        updateDelBtn();
     } catch (err) {
         console.error("Failed to load sheet:", err);
     }
@@ -166,19 +167,21 @@ function populateSheet(data) {
     renderContacts(data.contacts || []);
     // Recalculate everything
     recalcAll();
-    // Restore saved health state (clickable bar)
+    // Polarity
+    updatePolarity(parseInt(data.polarity) || 0);
+    // Fate thread
+    updateThreadBar(data.fate_thread_status || "intact");
+    // Health state — restore saved clickable state
     if (data.health_state) {
         document.querySelectorAll(".hs-seg").forEach(s => s.classList.remove("active"));
         const saved = document.querySelector(`.hs-seg[data-state="${data.health_state}"]`);
         if (saved) saved.classList.add("active");
     }
     updateHealthState();
-    // Polarity
-    updatePolarity(parseInt(data.polarity) || 0);
-    // Fate thread
-    updateThreadBar(data.fate_thread_status || "intact");
-    // Health state
-    updateHealthState();
+    // Inventory
+    renderInventory(data.inventory || []);
+    // Rot penalty check
+    checkRotPenalty();
     isDirty = false;
 }
 
@@ -191,10 +194,12 @@ function clearSheet() {
     document.querySelectorAll("select[data-field]").forEach(el => el.selectedIndex = 0);
     document.querySelectorAll(".attempt-dot").forEach(dot => dot.classList.remove("used"));
     renderContacts([]);
+    renderInventory([]);
     recalcAll();
     updatePolarity(0);
     updateThreadBar("intact");
     isDirty = false;
+    updateDelBtn();
 }
 
 // ── Auto-save on any change (debounced) ──────────────────────
@@ -226,6 +231,8 @@ function collectSheetData() {
     data.rot_attempts_used = attemptsUsed;
     // Contacts
     data.contacts = collectContacts();
+    // Inventory
+    data.inventory = collectInventory();
     // Health state (clickable bar)
     const activeHsSeg = document.querySelector(".hs-seg.active");
     if (activeHsSeg) data.health_state = activeHsSeg.dataset.state;
@@ -285,7 +292,7 @@ document.addEventListener("input", (e) => {
     if (el.dataset.field || el.closest("[data-field]")) scheduleAutoSave();
     // Trigger recalcs
     if (el.matches("input[data-field^='stat_']")) recalcAll();
-    // currentHealth stepper handled separately below
+    if (el.matches("#currentHealth")) updateHealthState();
     if (el.matches("#polarityInput")) updatePolarity(parseInt(el.value) || 0);
     if (el.matches("#fatePointsInput")) { /* auto-tracking placeholder */ }
 });
@@ -366,34 +373,34 @@ const HEALTH_STATES = {
 };
 
 function updateHealthState() {
-    // Shows the effect text for the currently active health segment.
-    // The active segment itself is set by clicking — not auto-calculated.
-    const activeEl = document.querySelector(".hs-seg.active");
-    if (!activeEl) return;
-    const state = activeEl.dataset.state;
-    const effectEl = document.getElementById("hsEffect");
-    if (!effectEl) return;
-    const stateData = HEALTH_STATES[state];
-    if (stateData && stateData.effect) {
-        effectEl.textContent = stateData.effect;
-        effectEl.classList.add("visible");
-    } else {
-        effectEl.classList.remove("visible");
-    }
-}
+    const maxEl = document.getElementById("maxHealth");
+    const curEl = document.getElementById("currentHealth");
+    if (!maxEl || !curEl) return;
 
-// Wire health state segments as clickable
-function initHealthStateClicks() {
+    const max = parseInt(maxEl.textContent) || 0;
+    const cur = parseInt(curEl.value);
+    if (!max || isNaN(cur)) return;
+
+    const ratio = Math.max(0, cur / max);
+    let activeState = "healthy";
+    if (ratio <= 0) activeState = "dying";
+    else if (ratio <= 0.25) activeState = "critical";
+    else if (ratio <= 0.50) activeState = "bloodied";
+    else if (ratio <= 0.75) activeState = "injured";
+
     document.querySelectorAll(".hs-seg").forEach(seg => {
-        seg.addEventListener("click", () => {
-            document.querySelectorAll(".hs-seg").forEach(s => s.classList.remove("active"));
-            seg.classList.add("active");
-            updateHealthState();
-            scheduleAutoSave();
-        });
+        seg.classList.toggle("active", seg.dataset.state === activeState);
     });
-}
-initHealthStateClicks();
+
+    const effect = HEALTH_STATES[activeState].effect;
+    const effectEl = document.getElementById("hsEffect");
+    if (effectEl) {
+        if (effect) {
+            effectEl.textContent = effect;
+            effectEl.classList.add("visible");
+        } else {
+            effectEl.classList.remove("visible");
+        }
     }
 }
 
@@ -905,15 +912,31 @@ document.getElementById("addInventoryBtn")?.addEventListener("click", () => {
 document.querySelectorAll(".dmg-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         const hpInput = document.getElementById("currentHealth");
+        const maxEl = document.getElementById("maxHealth");
         if (!hpInput) return;
+
+        const max = parseInt(maxEl?.textContent) || 0;
         const cur = parseInt(hpInput.value) || 0;
         const dmg = parseInt(btn.dataset.dmg) || 0;
         const heal = parseInt(btn.dataset.heal) || 0;
         const isDmg = dmg > 0;
-        // Uncapped — Storyteller may grant HP above max
-        hpInput.value = isDmg ? Math.max(0, cur - dmg) : cur + heal;
-        flashHpBlock(isDmg ? "damage" : "heal");
+
+        let newVal;
+        if (isDmg) newVal = Math.max(0, cur - dmg);
+        else newVal = Math.min(max || 9999, cur + heal);
+
+        hpInput.value = newVal;
+        updateHealthState();
         scheduleAutoSave();
+
+        // Flash the status block
+        const block = hpInput.closest(".status-block");
+        if (block) {
+            block.classList.remove("flash-damage", "flash-heal");
+            void block.offsetWidth; // reflow
+            block.classList.add(isDmg ? "flash-damage" : "flash-heal");
+            setTimeout(() => block.classList.remove("flash-damage", "flash-heal"), 500);
+        }
     });
 });
 
@@ -1012,21 +1035,7 @@ rhClear?.addEventListener("click", () => {
 //  PATCH: hook history + new fields into existing functions
 // ════════════════════════════════════════════════════════════
 
-// Patch populateSheet to also populate inventory
-const _origPopulate = populateSheet;
-function populateSheet(data) {
-    _origPopulate(data);
-    renderInventory(data.inventory || []);
-    checkRotPenalty();
-}
-
-// Patch collectSheetData to also collect inventory
-const _origCollect = collectSheetData;
-function collectSheetData() {
-    const data = _origCollect();
-    data.inventory = collectInventory();
-    return data;
-}
+// inventory + rot penalty wired into original functions below
 
 // Patch rollDice to push to history after resolving
 // We do this by monkey-patching the setTimeout inside rollDice.
@@ -1068,17 +1077,7 @@ function updateDelBtn() {
     if (charDelBtn) charDelBtn.classList.toggle("hidden", !currentSheetId);
 }
 
-// Hook into loadSheet and clearSheet to update del button visibility
-const _origLoadSheet = loadSheet;
-async function loadSheet(id) {
-    await _origLoadSheet(id);
-    updateDelBtn();
-}
-const _origClearSheet = clearSheet;
-function clearSheet() {
-    _origClearSheet();
-    updateDelBtn();
-}
+// updateDelBtn() wired directly into loadSheet and clearSheet
 
 // Open delete modal
 charDelBtn?.addEventListener("click", () => {
@@ -1148,36 +1147,3 @@ delCharConfirmBtn?.addEventListener("click", async () => {
         delCharConfirmBtn.textContent = "Delete Forever";
     }
 });
-// ════════════════════════════════════════════════════════════
-//  HP STEPPER — +/− buttons beside current HP
-// ════════════════════════════════════════════════════════════
-
-document.getElementById("hpMinus")?.addEventListener("click", () => {
-    const inp = document.getElementById("currentHealth");
-    if (!inp) return;
-    inp.value = (parseInt(inp.value) || 0) - 1;
-    flashHpBlock("damage");
-    scheduleAutoSave();
-});
-
-document.getElementById("hpPlus")?.addEventListener("click", () => {
-    const inp = document.getElementById("currentHealth");
-    if (!inp) return;
-    inp.value = (parseInt(inp.value) || 0) + 1;
-    flashHpBlock("heal");
-    scheduleAutoSave();
-});
-
-// Also fire on manual input into the stepper field
-document.getElementById("currentHealth")?.addEventListener("input", () => {
-    scheduleAutoSave();
-});
-
-function flashHpBlock(type) {
-    const block = document.getElementById("currentHealth")?.closest(".status-block");
-    if (!block) return;
-    block.classList.remove("flash-damage", "flash-heal");
-    void block.offsetWidth;
-    block.classList.add(type === "damage" ? "flash-damage" : "flash-heal");
-    setTimeout(() => block.classList.remove("flash-damage", "flash-heal"), 500);
-}
