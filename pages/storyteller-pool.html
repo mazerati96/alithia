@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storyteller — Character Pool — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/storyteller-pool.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger"><span></span><span></span><span></span></div>
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="locations.html">LOCATIONS</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+            <li><a href="storyteller-pool.html" class="active">STORYTELLER PORTAL</a></li>
+        </ul>
+    </div>
+    <div class="page-transition"></div>
+
+    <!-- Auth guard -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <!-- Access denied -->
+    <div class="access-denied hidden" id="accessDenied">
+        <div class="denied-inner">
+            <div class="denied-rune">ᚷ</div>
+            <h2 class="denied-title">Access Denied</h2>
+            <p class="denied-text">This page is restricted to Storytellers.<br />Your current role does not permit entry here.</p>
+            <a href="dashboard.html" class="denied-back">← Return to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Main wrap -->
+    <div class="pool-wrap hidden" id="poolWrap">
+
+        <header class="pool-topbar">
+            <div class="pool-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Storyteller — Character Pool</span>
+            </div>
+            <div class="pool-topbar-right">
+                <span class="st-badge">STORYTELLER</span>
+                <span class="topbar-username" id="topbarUsername">—</span>
+                <button class="signout-btn" id="signOutBtn">Sign Out</button>
+            </div>
+        </header>
+
+        <div class="pool-body">
+
+            <!-- Hero -->
+            <div class="pool-hero">
+                <div class="pool-hero-eyebrow">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text">STORYTELLER VIEW</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+                <h1 class="pool-hero-title">Character Pool</h1>
+                <p class="pool-hero-sub">All characters across all collaborators — read only</p>
+            </div>
+
+            <!-- Stats bar -->
+            <div class="pool-stats-bar">
+                <div class="pool-stat">
+                    <span class="pstat-val" id="statTotalPlayers">—</span>
+                    <span class="pstat-label">Players</span>
+                </div>
+                <div class="pstat-sep"></div>
+                <div class="pool-stat">
+                    <span class="pstat-val" id="statTotalChars">—</span>
+                    <span class="pstat-label">Characters</span>
+                </div>
+                <div class="pstat-sep"></div>
+                <div class="pool-stat">
+                    <span class="pstat-val" id="statLastUpdated">—</span>
+                    <span class="pstat-label">Last Updated</span>
+                </div>
+            </div>
+
+            <!-- Search + filter -->
+            <div class="pool-toolbar">
+                <div class="pool-search-wrap">
+                    <span class="pool-search-icon">⌕</span>
+                    <input type="text" class="pool-search" id="poolSearch"
+                           placeholder="Search characters or players…" autocomplete="off" />
+                </div>
+                <div class="pool-filter-chips" id="poolFilterChips">
+                    <button class="pool-chip active" data-filter="all">All Players</button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="pool-loading" id="poolLoading">
+                <span class="loading-rune">ᚠ</span>
+                <span>Summoning the chronicles…</span>
+            </div>
+
+            <!-- Empty -->
+            <div class="pool-empty hidden" id="poolEmpty">
+                <span class="empty-rune">ᚷ</span>
+                <p>No characters found.</p>
+            </div>
+
+            <!-- Grid -->
+            <div class="pool-grid" id="poolGrid"></div>
+
+        </div>
+    </div>
+
+    <!-- Character detail drawer -->
+    <div class="drawer-backdrop hidden" id="drawerBackdrop">
+        <div class="char-drawer" id="charDrawer">
+
+            <div class="drawer-topbar">
+                <div class="drawer-title-group">
+                    <span class="drawer-char-name" id="drawerCharName">—</span>
+                    <span class="drawer-player-name" id="drawerPlayerName">—</span>
+                </div>
+                <div class="drawer-actions">
+                    <a class="drawer-open-btn" id="drawerOpenBtn" href="#" target="_blank">
+                        Open Full Sheet ↗
+                    </a>
+                    <button class="drawer-close" id="drawerClose">✕</button>
+                </div>
+            </div>
+
+            <div class="drawer-body" id="drawerBody">
+                <div class="drawer-loading" id="drawerLoading">
+                    <span class="loading-rune">ᚠ</span>
+                    <span>Loading character…</span>
+                </div>
+                <div class="drawer-content hidden" id="drawerContent">
+
+                    <!-- Identity -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Identity</div>
+                        <div class="dr-fields-row">
+                            <div class="dr-field"><span class="dr-label">Pronouns</span><span class="dr-val" id="drPronouns">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Species</span><span class="dr-val" id="drSpecies">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Class / Level</span><span class="dr-val" id="drClassLevel">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Origin</span><span class="dr-val" id="drOrigin">—</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Stats</div>
+                        <div class="dr-stats-grid">
+                            <div class="dr-stat-group martial">
+                                <div class="dr-stat-header">Martial</div>
+                                <div class="dr-stat-row"><span>Fortitude</span><span class="dr-stat-val" id="drFortitude">0</span></div>
+                                <div class="dr-stat-row"><span>Muscle</span><span class="dr-stat-val" id="drMuscle">0</span></div>
+                                <div class="dr-stat-row"><span>Swiftness</span><span class="dr-stat-val" id="drSwiftness">0</span></div>
+                            </div>
+                            <div class="dr-stat-group mind">
+                                <div class="dr-stat-header">Mind</div>
+                                <div class="dr-stat-row"><span>Keeness</span><span class="dr-stat-val" id="drKeeness">0</span></div>
+                                <div class="dr-stat-row"><span>Wisdom</span><span class="dr-stat-val" id="drWisdom">0</span></div>
+                                <div class="dr-stat-row"><span>Charm</span><span class="dr-stat-val" id="drCharm">0</span></div>
+                            </div>
+                            <div class="dr-stat-group magic">
+                                <div class="dr-stat-header">Magic</div>
+                                <div class="dr-stat-row"><span>Faith</span><span class="dr-stat-val" id="drFaith">0</span></div>
+                                <div class="dr-stat-row"><span>Self</span><span class="dr-stat-val" id="drSelf">0</span></div>
+                                <div class="dr-stat-row"><span>Lore</span><span class="dr-stat-val" id="drLore">0</span></div>
+                            </div>
+                            <div class="dr-stat-group derived">
+                                <div class="dr-stat-header">Derived</div>
+                                <div class="dr-stat-row"><span>Vitality</span><span class="dr-stat-val" id="drVitality">—</span></div>
+                                <div class="dr-stat-row"><span>Tenacity</span><span class="dr-stat-val" id="drTenacity">—</span></div>
+                                <div class="dr-stat-row"><span>Soul</span><span class="dr-stat-val" id="drSoul">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Current Status</div>
+                        <div class="dr-status-row">
+                            <div class="dr-status-block">
+                                <span class="dr-status-name">Health</span>
+                                <span class="dr-status-val" id="drHealth">—</span>
+                                <span class="dr-status-state" id="drHealthState"></span>
+                            </div>
+                            <div class="dr-status-block">
+                                <span class="dr-status-name">Morale</span>
+                                <span class="dr-status-val" id="drMorale">—</span>
+                            </div>
+                            <div class="dr-status-block">
+                                <span class="dr-status-name">Sanity</span>
+                                <span class="dr-status-val" id="drSanity">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Systems -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Systems</div>
+                        <div class="dr-systems-row">
+                            <div class="dr-sys-block rot">
+                                <span class="dr-sys-label">Rot</span>
+                                <span class="dr-sys-val" id="drRotStatus">—</span>
+                                <span class="dr-sys-sub" id="drRotCycle">—</span>
+                            </div>
+                            <div class="dr-sys-block fate">
+                                <span class="dr-sys-label">Fate Points</span>
+                                <span class="dr-sys-val" id="drFatePoints">—</span>
+                                <span class="dr-sys-sub" id="drFateThread">—</span>
+                            </div>
+                            <div class="dr-sys-block polarity">
+                                <span class="dr-sys-label">Polarity</span>
+                                <span class="dr-sys-val" id="drPolarity">—</span>
+                                <span class="dr-sys-sub" id="drPolarityBand">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fated Slot — Storyteller only -->
+                    <div class="dr-section dr-section-secret">
+                        <div class="dr-section-header">
+                            Fated Slot
+                            <span class="dr-secret-badge">STORYTELLER ONLY</span>
+                        </div>
+                        <div class="dr-fated-slot" id="drFatedSlot">—</div>
+                        <div class="dr-rot-notes" id="drRotNotes"></div>
+                    </div>
+
+                    <!-- Backstory -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Backstory</div>
+                        <div class="dr-backstory" id="drBackstory">Not recorded yet.</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/storyteller-pool.js"></script>
+</body>
+</html>

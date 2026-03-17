@@ -71,9 +71,32 @@ onAuthStateChanged(auth, async (user) => {
     }
     currentUser = user;
     topbarUsername.textContent = user.displayName || user.email;
-    authGuard.classList.add("fade-out");
-    setTimeout(() => { authGuard.style.display = "none"; sheetWrap.classList.remove("hidden"); }, 500);
-    await loadCharacterList();
+
+    // Check if this is a storyteller viewing someone else's sheet via URL params
+    const params = new URLSearchParams(window.location.search);
+    const paramUid = params.get("uid");
+    const paramSheet = params.get("sheet");
+
+    // Check isStoryteller boolean field
+    let isStUser = false;
+    try {
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        if (userSnap.exists()) isStUser = userSnap.data().isStoryteller === true;
+    } catch (_) { }
+
+    if (paramUid && paramSheet && isStUser) {
+        // Storyteller viewing a specific player's sheet
+        isStoryteller = true;
+        viewingUid = paramUid;
+        authGuard.classList.add("fade-out");
+        setTimeout(() => { authGuard.style.display = "none"; sheetWrap.classList.remove("hidden"); }, 500);
+        await loadStorytellerView(paramUid, paramSheet);
+    } else {
+        // Normal player view
+        authGuard.classList.add("fade-out");
+        setTimeout(() => { authGuard.style.display = "none"; sheetWrap.classList.remove("hidden"); }, 500);
+        await loadCharacterList();
+    }
 });
 
 signOutBtn.addEventListener("click", async () => {
@@ -117,6 +140,81 @@ async function loadCharacterList() {
     }
 }
 
+// ── Storyteller view — load a specific player's sheet read-only ─
+async function loadStorytellerView(ownerUid, sheetId) {
+    try {
+        // Update topbar to show storyteller context
+        const topbarLabel = document.querySelector(".topbar-label");
+        if (topbarLabel) topbarLabel.textContent = "Storyteller — Read Only";
+
+        // Add a visible read-only banner
+        const banner = document.createElement("div");
+        banner.style.cssText = `
+            position:fixed;top:var(--topbar-h, 56px);left:0;right:0;z-index:77;
+            background:rgba(255,215,0,0.08);border-bottom:1px solid rgba(255,215,0,0.25);
+            padding:0.4rem 1.25rem;display:flex;align-items:center;gap:0.75rem;
+            font-family:var(--font-display);font-size:0.45rem;letter-spacing:0.2em;
+            color:rgba(255,215,0,0.7);
+        `;
+        banner.innerHTML = `
+            ★ STORYTELLER VIEW — READ ONLY &nbsp;·&nbsp;
+            <a href="storyteller-pool.html" style="color:rgba(255,215,0,0.5);text-decoration:none;font-style:italic;font-family:var(--font-body);font-size:0.8rem;letter-spacing:0;">
+                ← Back to Character Pool
+            </a>
+        `;
+        document.body.appendChild(banner);
+
+        // Adjust sheet wrap padding for the extra banner
+        const sheetWrapEl = document.getElementById("sheetWrap");
+        if (sheetWrapEl) sheetWrapEl.style.paddingTop = "calc(var(--topbar-h) + var(--tabnav-h) + 36px)";
+
+        // Load the sheet from the owner's collection
+        const snap = await getDoc(
+            doc(db, "character-sheets", ownerUid, "sheets", sheetId)
+        );
+        if (!snap.exists()) {
+            console.error("Sheet not found");
+            return;
+        }
+        currentSheetId = sheetId;
+        sheetData = snap.data();
+
+        // Show the owner's name in the character switcher area
+        const charName = sheetData.charName || "Unnamed Character";
+        charSelect.innerHTML = `<option value="${sheetId}">${charName}</option>`;
+        charSelect.value = sheetId;
+
+        populateSheet(sheetData);
+        lockAllFields();
+    } catch (err) {
+        console.error("Failed to load storyteller view:", err);
+    }
+}
+
+// ── Lock all editable fields (storyteller read-only mode) ────
+function lockAllFields() {
+    // Disable all contenteditable
+    document.querySelectorAll("[contenteditable]").forEach(el => {
+        el.contentEditable = "false";
+        el.style.cursor = "default";
+        el.style.opacity = "0.85";
+    });
+    // Disable all inputs
+    document.querySelectorAll("input, select, textarea, button").forEach(el => {
+        // Keep navigation, tab buttons, and sign out working
+        if (el.closest(".sheet-tabnav") || el.closest(".sheet-topbar") ||
+            el.closest(".dice-bar") || el.closest(".roll-history") ||
+            el.id === "signOutBtn") return;
+        el.disabled = true;
+        el.style.cursor = "default";
+    });
+    // Hide save/pdf/new/delete buttons
+    ["sheetSaveBtn", "sheetPdfBtn", "charNewBtn", "charDelBtn"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+    });
+}
+
 charSelect.addEventListener("change", async () => {
     const id = charSelect.value;
     if (!id) { clearSheet(); return; }
@@ -133,7 +231,6 @@ async function loadSheet(id) {
         sessionStorage.setItem("alithia_last_sheet", id);
         sheetData = snap.data();
         populateSheet(sheetData);
-        updateDelBtn();
     } catch (err) {
         console.error("Failed to load sheet:", err);
     }
@@ -171,17 +268,8 @@ function populateSheet(data) {
     updatePolarity(parseInt(data.polarity) || 0);
     // Fate thread
     updateThreadBar(data.fate_thread_status || "intact");
-    // Health state — restore saved clickable state
-    if (data.health_state) {
-        document.querySelectorAll(".hs-seg").forEach(s => s.classList.remove("active"));
-        const saved = document.querySelector(`.hs-seg[data-state="${data.health_state}"]`);
-        if (saved) saved.classList.add("active");
-    }
+    // Health state
     updateHealthState();
-    // Inventory
-    renderInventory(data.inventory || []);
-    // Rot penalty check
-    checkRotPenalty();
     isDirty = false;
 }
 
@@ -194,12 +282,10 @@ function clearSheet() {
     document.querySelectorAll("select[data-field]").forEach(el => el.selectedIndex = 0);
     document.querySelectorAll(".attempt-dot").forEach(dot => dot.classList.remove("used"));
     renderContacts([]);
-    renderInventory([]);
     recalcAll();
     updatePolarity(0);
     updateThreadBar("intact");
     isDirty = false;
-    updateDelBtn();
 }
 
 // ── Auto-save on any change (debounced) ──────────────────────
@@ -231,11 +317,6 @@ function collectSheetData() {
     data.rot_attempts_used = attemptsUsed;
     // Contacts
     data.contacts = collectContacts();
-    // Inventory
-    data.inventory = collectInventory();
-    // Health state (clickable bar)
-    const activeHsSeg = document.querySelector(".hs-seg.active");
-    if (activeHsSeg) data.health_state = activeHsSeg.dataset.state;
     return data;
 }
 
@@ -1035,7 +1116,11 @@ rhClear?.addEventListener("click", () => {
 //  PATCH: hook history + new fields into existing functions
 // ════════════════════════════════════════════════════════════
 
-// inventory + rot penalty wired into original functions below
+// Patch populateSheet to also populate inventory
+const _origPopulate = populateSheet;
+
+// Patch collectSheetData to also collect inventory
+const _origCollect = collectSheetData;
 
 // Patch rollDice to push to history after resolving
 // We do this by monkey-patching the setTimeout inside rollDice.
@@ -1077,7 +1162,9 @@ function updateDelBtn() {
     if (charDelBtn) charDelBtn.classList.toggle("hidden", !currentSheetId);
 }
 
-// updateDelBtn() wired directly into loadSheet and clearSheet
+// Hook into loadSheet and clearSheet to update del button visibility
+const _origLoadSheet = loadSheet;
+const _origClearSheet = clearSheet;
 
 // Open delete modal
 charDelBtn?.addEventListener("click", () => {
