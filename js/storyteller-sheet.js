@@ -295,7 +295,10 @@ function buildPlayerCard(char, playerName, key, override) {
                 <div class="ptc-rot-dots">
                     ${[1, 2, 3].map(n => `<button class="ptc-dot${stAttempts >= n ? " used" : ""}" data-attempt="${n}"></button>`).join("")}
                 </div>
-                <span class="ptc-cycle-label">Cycle <span class="ptc-cycle-num">${stCycle}</span></span>
+                <span class="ptc-cycle-label">Cycle
+                    <input class="ptc-cycle-input" type="number" min="0" max="999"
+                           value="${stCycle}" title="Edit cycle number — set to 0 to reset" />
+                </span>
                 <button class="ptc-reset-btn">Reset Cycle</button>
             </div>
             <!-- Rot penalty banner -->
@@ -306,13 +309,14 @@ function buildPlayerCard(char, playerName, key, override) {
             <!-- Expand toggle -->
             <button class="ptc-expand-btn">
                 <span class="ptc-expand-icon">▼</span>
-                Polarity · Fate · Notes
+                Polarity · Fate · Roll Tally · Notes
             </button>
 
             <!-- Expandable details -->
             <div class="ptc-details hidden">
                 ${buildPolarityRow(polarity)}
                 ${buildFateRow(fatePoints, fateThread)}
+                ${buildTallyGrid(override)}
                 <div class="ptc-notes-row">
                     <span class="ptc-field-label">ST Notes</span>
                     <textarea class="ptc-notes-input" placeholder="Private storyteller notes on this character…">${escHtml(override.notes || "")}</textarea>
@@ -367,6 +371,25 @@ function buildFateRow(points, thread) {
     `;
 }
 
+function buildTallyGrid(override) {
+    const crossed = override.stRollTally || [];
+    const cells = Array.from({ length: 20 }, (_, i) => {
+        const n = i + 1;
+        const isCrossed = crossed.includes(n);
+        return `<button class="tally-cell${isCrossed ? " crossed" : ""}" data-num="${n}">${n}</button>`;
+    }).join("");
+
+    return `
+        <div class="ptc-tally-section">
+            <div class="ptc-tally-header">
+                <span class="ptc-field-label">Roll Tally (1–20)</span>
+                <button class="ptc-tally-clear-btn">Clear All</button>
+            </div>
+            <div class="ptc-tally-grid">${cells}</div>
+        </div>
+    `;
+}
+
 // ── Card event listeners ─────────────────────────────────────
 function attachCardListeners(card, key, char) {
     // Exclude toggle
@@ -414,14 +437,47 @@ function attachCardListeners(card, key, char) {
         });
     });
 
-    // Reset cycle
+    // Cycle number input — editable, can be set to 0
+    const cycleInput = card.querySelector(".ptc-cycle-input");
+    cycleInput?.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value);
+        getOverride(key).stRotCycle = isNaN(val) ? 0 : Math.max(0, val);
+        scheduleAutoSave();
+    });
+
+    // Reset cycle — clears dots, bumps cycle counter by 1
     card.querySelector(".ptc-reset-btn").addEventListener("click", () => {
         const override = getOverride(key);
         override.stRotAttempts = 0;
         override.stRotCycle = (parseInt(override.stRotCycle) || 1) + 1;
         dots.forEach(d => d.classList.remove("used"));
         if (penaltyBanner) penaltyBanner.classList.add("hidden");
-        card.querySelector(".ptc-cycle-num").textContent = override.stRotCycle;
+        if (cycleInput) cycleInput.value = override.stRotCycle;
+        scheduleAutoSave();
+    });
+
+    // Tally grid — click to cross, click again to un-cross
+    card.querySelectorAll(".tally-cell").forEach(cell => {
+        cell.addEventListener("click", () => {
+            const n = parseInt(cell.dataset.num);
+            const override = getOverride(key);
+            if (!override.stRollTally) override.stRollTally = [];
+            const idx = override.stRollTally.indexOf(n);
+            if (idx === -1) {
+                override.stRollTally.push(n);
+                cell.classList.add("crossed");
+            } else {
+                override.stRollTally.splice(idx, 1);
+                cell.classList.remove("crossed");
+            }
+            scheduleAutoSave();
+        });
+    });
+
+    // Tally clear button — uncrosses all, keeps grid
+    card.querySelector(".ptc-tally-clear-btn")?.addEventListener("click", () => {
+        getOverride(key).stRollTally = [];
+        card.querySelectorAll(".tally-cell").forEach(c => c.classList.remove("crossed"));
         scheduleAutoSave();
     });
 

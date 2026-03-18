@@ -794,13 +794,103 @@ html, body {
     font-size: 0.75rem;
     color: rgba(255,159,67,0.55);
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
-.ptc-cycle-num {
+/* Cycle number — editable input */
+.ptc-cycle-input {
+    width: 44px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(255,159,67,0.3);
+    color: var(--rot-col);
     font-family: var(--font-display);
     font-size: 0.6rem;
-    color: var(--rot-col);
+    text-align: center;
+    padding: 0 0.1rem;
+    outline: none;
+    -moz-appearance: textfield;
+    transition: border-color 0.2s;
 }
+
+    .ptc-cycle-input::-webkit-outer-spin-button,
+    .ptc-cycle-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+
+    .ptc-cycle-input:focus {
+        border-color: var(--rot-col);
+    }
+
+/* Roll tally section */
+.ptc-tally-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+    background: rgba(255,159,67,0.02);
+    border: 1px solid rgba(255,159,67,0.1);
+}
+
+.ptc-tally-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.ptc-tally-clear-btn {
+    background: none;
+    border: 1px solid rgba(255,159,67,0.2);
+    color: rgba(255,159,67,0.45);
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    padding: 0.12rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .ptc-tally-clear-btn:hover {
+        border-color: var(--rot-col);
+        color: var(--rot-col);
+    }
+
+.ptc-tally-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.25rem;
+}
+
+.tally-cell {
+    background: rgba(255,159,67,0.04);
+    border: 1px solid rgba(255,159,67,0.15);
+    color: rgba(255,159,67,0.7);
+    font-family: var(--font-display);
+    font-size: 0.45rem;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s;
+    user-select: none;
+}
+
+    .tally-cell:hover {
+        border-color: var(--rot-col);
+        color: var(--rot-col);
+        background: rgba(255,159,67,0.08);
+    }
+
+    .tally-cell.crossed {
+        color: rgba(255,159,67,0.25);
+        background: rgba(255,107,107,0.04);
+        border-color: rgba(255,107,107,0.2);
+        text-decoration: line-through;
+        text-decoration-color: rgba(255,107,107,0.6);
+        text-decoration-thickness: 2px;
+    }
 
 .ptc-reset-btn {
     background: none;
