@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storyteller Sheet — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/storyteller-sheet.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger"><span></span><span></span><span></span></div>
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="locations.html">LOCATIONS</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="character-sheet.html">CHARACTER SHEET</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+            <li><a href="storyteller-pool.html" class="active">STORYTELLER PORTAL</a></li>
+        </ul>
+    </div>
+    <div class="page-transition"></div>
+
+    <!-- Auth guard -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <!-- Access denied -->
+    <div class="access-denied hidden" id="accessDenied">
+        <div class="denied-inner">
+            <div class="denied-rune">ᚷ</div>
+            <h2 class="denied-title">Access Denied</h2>
+            <p class="denied-text">This page is restricted to Storytellers.<br />Your current role does not permit entry here.</p>
+            <a href="dashboard.html" class="denied-back">← Return to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Main sheet wrap -->
+    <div class="st-sheet-wrap hidden" id="stSheetWrap">
+
+        <!-- ── Topbar ───────────────────────────────────────────── -->
+        <header class="st-topbar" id="stTopbar">
+            <div class="st-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Storyteller Sheet</span>
+            </div>
+            <div class="st-topbar-right">
+                <span class="st-save-status" id="saveStatus"></span>
+                <button class="st-topbar-btn" id="stSaveBtn"><span class="btn-glyph">✦</span> Save</button>
+                <button class="st-topbar-btn st-topbar-btn-gold" id="stPdfBtn">↓ PDF</button>
+                <a href="storyteller-pool.html" class="st-topbar-btn st-topbar-btn-dim">← Pool</a>
+                <span class="st-badge">STORYTELLER</span>
+                <span class="topbar-username" id="topbarUsername">—</span>
+                <button class="signout-btn" id="signOutBtn">Sign Out</button>
+            </div>
+        </header>
+
+        <!-- ── Tab nav ─────────────────────────────────────────── -->
+        <nav class="st-tabnav" id="stTabnav">
+            <button class="st-tab active" data-tab="players">
+                <span class="tab-rune">ᚠ</span> Players
+            </button>
+            <button class="st-tab" data-tab="sessions">
+                <span class="tab-rune">ᚢ</span> Session Log
+            </button>
+            <button class="st-tab" data-tab="world">
+                <span class="tab-rune">ᚦ</span> World
+            </button>
+        </nav>
+
+        <!-- ══════════════════════════════════════════════════════
+             TAB 1 — PLAYERS
+        ══════════════════════════════════════════════════════════ -->
+        <section class="st-section active" id="tab-players">
+            <div class="st-section-inner">
+
+                <div class="st-section-head">
+                    <div class="st-section-head-text">
+                        <h2 class="st-section-title">Player Tracker</h2>
+                        <p class="st-section-sub">Fated slots · Rot tracking · Polarity &amp; Fate — synced live from character sheets</p>
+                    </div>
+                    <div class="st-head-actions">
+                        <button class="st-ghost-btn" id="toggleExcludedBtn">Show Excluded</button>
+                        <button class="st-ghost-btn" id="refreshPlayersBtn">↺ Refresh</button>
+                    </div>
+                </div>
+
+                <div class="st-loading" id="playersLoading">
+                    <span class="loading-rune">ᚠ</span>
+                    <span>Summoning the chronicles…</span>
+                </div>
+
+                <div class="st-empty hidden" id="playersEmpty">
+                    <span class="empty-rune">ᚷ</span>
+                    <p>No player characters found in the pool.</p>
+                </div>
+
+                <!-- Scrollable player tracker list -->
+                <div class="player-tracker-scroll" id="playerTrackerList"></div>
+
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             TAB 2 — SESSION LOG
+        ══════════════════════════════════════════════════════════ -->
+        <section class="st-section" id="tab-sessions">
+            <div class="st-section-inner">
+
+                <div class="st-section-head">
+                    <div class="st-section-head-text">
+                        <h2 class="st-section-title">Session Log</h2>
+                        <p class="st-section-sub">A running chronicle of your sessions — dates, events, and what transpired</p>
+                    </div>
+                    <button class="st-add-btn" id="addSessionBtn">＋ New Session</button>
+                </div>
+
+                <div class="session-log-list" id="sessionLogList"></div>
+
+                <div class="st-empty hidden" id="sessionsEmpty">
+                    <span class="empty-rune">ᚢ</span>
+                    <p>No sessions recorded yet. Begin your chronicle.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             TAB 3 — WORLD
+        ══════════════════════════════════════════════════════════ -->
+        <section class="st-section" id="tab-world">
+            <div class="st-section-inner st-world-grid">
+
+                <!-- Campaign scratchpad -->
+                <div class="st-card st-card-full">
+                    <div class="st-card-header">
+                        <span class="st-card-title">Campaign Notes</span>
+                        <span class="st-card-sub">Private master scratchpad — Storyteller eyes only</span>
+                    </div>
+                    <div class="st-big-textarea"
+                         contenteditable="true"
+                         id="campaignNotes"
+                         data-placeholder="Campaign arcs, secrets, reminders, big-picture notes…"></div>
+                </div>
+
+                <!-- NPC Tracker -->
+                <div class="st-card">
+                    <div class="st-card-header">
+                        <span class="st-card-title">NPC Tracker</span>
+                        <button class="st-add-btn" id="addNpcBtn">＋ Add NPC</button>
+                    </div>
+                    <div class="st-scroll-wrap" id="npcScrollWrap">
+                        <div class="npc-list" id="npcList"></div>
+                    </div>
+                    <div class="st-empty-inline hidden" id="npcEmpty">No NPCs tracked yet.</div>
+                </div>
+
+                <!-- World Events -->
+                <div class="st-card">
+                    <div class="st-card-header">
+                        <span class="st-card-title">World Events</span>
+                        <button class="st-add-btn" id="addEventBtn">＋ Add Event</button>
+                    </div>
+                    <div class="st-scroll-wrap" id="eventsScrollWrap">
+                        <div class="events-list" id="eventsList"></div>
+                    </div>
+                    <div class="st-empty-inline hidden" id="eventsEmpty">No events recorded yet.</div>
+                </div>
+
+            </div>
+        </section>
+
+    </div><!-- /st-sheet-wrap -->
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/storyteller-sheet.js"></script>
+</body>
+</html>
