@@ -265,6 +265,7 @@ async function loadSheet(id) {
         sessionStorage.setItem("alithia_last_sheet", id);
         sheetData = snap.data();
         populateSheet(sheetData);
+        updateDelBtn();         // ← show delete button now that a sheet is loaded
     } catch (err) {
         console.error("Failed to load sheet:", err);
     }
@@ -281,14 +282,7 @@ function populateSheet(data) {
     // Input fields (number + text)
     document.querySelectorAll("input[data-field]").forEach(el => {
         const key = el.dataset.field;
-        if (data[key] !== undefined) {
-            // For stat inputs, don't render 0 — let the placeholder show instead
-            if (el.classList.contains("stat-val") && data[key] === 0) {
-                el.value = "";
-            } else {
-                el.value = data[key];
-            }
-        }
+        if (data[key] !== undefined) el.value = data[key];
     });
     // Select fields
     document.querySelectorAll("select[data-field]").forEach(el => {
@@ -327,7 +321,7 @@ function clearSheet() {
     currentSheetId = null;
     sheetData = {};
     document.querySelectorAll("[data-field][contenteditable]").forEach(el => el.innerHTML = "");
-    document.querySelectorAll("input[data-field]").forEach(el => { el.value = el.type === "number" ? 0 : ""; });
+    document.querySelectorAll("input[data-field]").forEach(el => { el.value = el.type === "number" ? "" : ""; });
     document.querySelectorAll("select[data-field]").forEach(el => el.selectedIndex = 0);
     document.querySelectorAll(".attempt-dot").forEach(dot => dot.classList.remove("used"));
     renderContacts([]);
@@ -340,6 +334,7 @@ function clearSheet() {
     updatePolarity(0);
     updateThreadBar("intact");
     isDirty = false;
+    updateDelBtn();             // ← hide delete button now that no sheet is loaded
 }
 
 // ── Auto-save on any change (debounced) ──────────────────────
@@ -749,6 +744,7 @@ newCharCreate.addEventListener("click", async () => {
         charSelect.value = newId;
         newCharModal.classList.add("hidden");
         if (isDirty) await saveSheet();
+        clearSheet();           // ← wipe old sheet values before loading blank new one
         await loadSheet(newId);
     } catch (err) {
         console.error("Create failed:", err);
@@ -1410,10 +1406,6 @@ const delCharNameDisplay = document.getElementById("delCharNameDisplay");
 function updateDelBtn() {
     if (charDelBtn) charDelBtn.classList.toggle("hidden", !currentSheetId);
 }
-
-// Hook into loadSheet and clearSheet to update del button visibility
-const _origLoadSheet = loadSheet;
-const _origClearSheet = clearSheet;
 
 // Open delete modal
 charDelBtn?.addEventListener("click", () => {
