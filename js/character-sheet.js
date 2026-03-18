@@ -296,6 +296,14 @@ function populateSheet(data) {
     });
     // Contacts
     renderContacts(data.contacts || []);
+    // Inventory
+    renderInventory(data.inventory || []);
+    // Spells
+    renderSpells(data.spells || []);
+    // Action lists
+    renderWeaponActions(data.weaponActions || []);
+    renderSpellActions(data.spellActions || []);
+    renderOtherActions(data.otherActions || []);
     // Recalculate everything
     recalcAll();
     // Polarity
@@ -316,6 +324,11 @@ function clearSheet() {
     document.querySelectorAll("select[data-field]").forEach(el => el.selectedIndex = 0);
     document.querySelectorAll(".attempt-dot").forEach(dot => dot.classList.remove("used"));
     renderContacts([]);
+    renderInventory([]);
+    renderSpells([]);
+    renderWeaponActions([]);
+    renderSpellActions([]);
+    renderOtherActions([]);
     recalcAll();
     updatePolarity(0);
     updateThreadBar("intact");
@@ -351,6 +364,14 @@ function collectSheetData() {
     data.rot_attempts_used = attemptsUsed;
     // Contacts
     data.contacts = collectContacts();
+    // Inventory
+    data.inventory = collectInventory();
+    // Spells
+    data.spells = collectSpells();
+    // Action lists
+    data.weaponActions = collectWeaponActions();
+    data.spellActions = collectSpellActions();
+    data.otherActions = collectOtherActions();
     return data;
 }
 
@@ -1018,6 +1039,193 @@ function collectInventory() {
 
 document.getElementById("addInventoryBtn")?.addEventListener("click", () => {
     addInventoryRow();
+});
+
+// ════════════════════════════════════════════════════════════
+//  SPELL LIST
+// ════════════════════════════════════════════════════════════
+
+function renderSpells(spells) {
+    const list = document.getElementById("spellList");
+    if (!list) return;
+    list.innerHTML = "";
+    (spells || []).forEach(s => addSpellRow(s.name || "", s.mp || "", s.desc || ""));
+}
+
+function addSpellRow(name = "", mp = "", desc = "") {
+    const list = document.getElementById("spellList");
+    if (!list) return;
+    const row = document.createElement("div");
+    row.className = "spell-row";
+    row.innerHTML = `
+        <div class="spell-row-top">
+            <input class="spell-name-input" type="text" placeholder="Spell name…" value="${escHtml(name)}" maxlength="80" />
+            <input class="spell-mp-input" type="number" min="0" max="999" placeholder="0" value="${escHtml(String(mp))}" title="Mana cost" />
+            <span class="spell-mp-label">MP</span>
+            <button class="spell-del-btn" title="Remove spell">✕</button>
+        </div>
+        <input class="spell-desc-input" type="text" placeholder="Description, effect, requirements…" value="${escHtml(desc)}" maxlength="200" />
+    `;
+    row.querySelector(".spell-del-btn").addEventListener("click", () => { row.remove(); scheduleAutoSave(); });
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", scheduleAutoSave));
+    list.appendChild(row);
+    if (!name) row.querySelector(".spell-name-input").focus();
+}
+
+function collectSpells() {
+    const spells = [];
+    document.querySelectorAll(".spell-row").forEach(row => {
+        const name = row.querySelector(".spell-name-input")?.value.trim();
+        const mp = row.querySelector(".spell-mp-input")?.value;
+        const desc = row.querySelector(".spell-desc-input")?.value.trim();
+        if (name || desc) spells.push({ name: name || "", mp: mp || "", desc: desc || "" });
+    });
+    return spells;
+}
+
+document.getElementById("addSpellBtn")?.addEventListener("click", () => {
+    addSpellRow();
+    scheduleAutoSave();
+});
+
+// ════════════════════════════════════════════════════════════
+//  ACTION LISTS — WEAPONS
+// ════════════════════════════════════════════════════════════
+
+function renderWeaponActions(items) {
+    const list = document.getElementById("weaponList");
+    if (!list) return;
+    list.innerHTML = "";
+    (items || []).forEach(w => addWeaponActionRow(w.name || "", w.primaryStat || "", w.secondaryStat || "", w.notes || ""));
+}
+
+function addWeaponActionRow(name = "", primaryStat = "", secondaryStat = "", notes = "") {
+    const list = document.getElementById("weaponList");
+    if (!list) return;
+    const row = document.createElement("div");
+    row.className = "weapon-entry";
+    row.innerHTML = `
+        <div class="weapon-entry-top">
+            <input class="weapon-name-input" type="text" placeholder="Weapon name…" value="${escHtml(name)}" maxlength="60" />
+            <input class="weapon-stat-input" type="text" placeholder="Primary stat…" value="${escHtml(primaryStat)}" maxlength="40" />
+            <input class="weapon-stat-input" type="text" placeholder="Secondary stat…" value="${escHtml(secondaryStat)}" maxlength="40" />
+            <button class="action-entry-del-btn" title="Remove weapon">✕</button>
+        </div>
+        <input class="weapon-notes-input" type="text" placeholder="Damage, range, special notes…" value="${escHtml(notes)}" maxlength="120" />
+    `;
+    row.querySelector(".action-entry-del-btn").addEventListener("click", () => { row.remove(); scheduleAutoSave(); });
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", scheduleAutoSave));
+    list.appendChild(row);
+    if (!name) row.querySelector(".weapon-name-input").focus();
+}
+
+function collectWeaponActions() {
+    const items = [];
+    document.querySelectorAll(".weapon-entry").forEach(row => {
+        const inputs = row.querySelectorAll("input");
+        const name = inputs[0]?.value.trim();
+        const primaryStat = inputs[1]?.value.trim();
+        const secondaryStat = inputs[2]?.value.trim();
+        const notes = inputs[3]?.value.trim();
+        if (name || primaryStat) items.push({ name: name || "", primaryStat: primaryStat || "", secondaryStat: secondaryStat || "", notes: notes || "" });
+    });
+    return items;
+}
+
+document.getElementById("addWeaponBtn")?.addEventListener("click", () => {
+    addWeaponActionRow();
+    scheduleAutoSave();
+});
+
+// ════════════════════════════════════════════════════════════
+//  ACTION LISTS — SPELL SLOTS
+// ════════════════════════════════════════════════════════════
+
+function renderSpellActions(items) {
+    const list = document.getElementById("spellActionList");
+    if (!list) return;
+    list.innerHTML = "";
+    (items || []).forEach(s => addSpellActionRow(s.name || "", s.mp || "", s.desc || ""));
+}
+
+function addSpellActionRow(name = "", mp = "", desc = "") {
+    const list = document.getElementById("spellActionList");
+    if (!list) return;
+    const row = document.createElement("div");
+    row.className = "spell-action-entry";
+    row.innerHTML = `
+        <div class="spell-action-top">
+            <input class="spell-action-name-input" type="text" placeholder="Spell name…" value="${escHtml(name)}" maxlength="60" />
+            <input class="spell-action-mp-input" type="number" min="0" max="999" placeholder="0" value="${escHtml(String(mp))}" title="Mana cost" />
+            <span class="spell-action-mp-label">MP</span>
+            <button class="action-entry-del-btn" title="Remove slot">✕</button>
+        </div>
+        <input class="spell-action-desc-input" type="text" placeholder="Effect, description, stat used…" value="${escHtml(desc)}" maxlength="150" />
+    `;
+    row.querySelector(".action-entry-del-btn").addEventListener("click", () => { row.remove(); scheduleAutoSave(); });
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", scheduleAutoSave));
+    list.appendChild(row);
+    if (!name) row.querySelector(".spell-action-name-input").focus();
+}
+
+function collectSpellActions() {
+    const items = [];
+    document.querySelectorAll(".spell-action-entry").forEach(row => {
+        const name = row.querySelector(".spell-action-name-input")?.value.trim();
+        const mp = row.querySelector(".spell-action-mp-input")?.value;
+        const desc = row.querySelector(".spell-action-desc-input")?.value.trim();
+        if (name || desc) items.push({ name: name || "", mp: mp || "", desc: desc || "" });
+    });
+    return items;
+}
+
+document.getElementById("addSpellActionBtn")?.addEventListener("click", () => {
+    addSpellActionRow();
+    scheduleAutoSave();
+});
+
+// ════════════════════════════════════════════════════════════
+//  ACTION LISTS — OTHER ACTIONS
+// ════════════════════════════════════════════════════════════
+
+function renderOtherActions(items) {
+    const list = document.getElementById("otherActionList");
+    if (!list) return;
+    list.innerHTML = "";
+    (items || []).forEach(o => addOtherActionRow(o.name || "", o.desc || ""));
+}
+
+function addOtherActionRow(name = "", desc = "") {
+    const list = document.getElementById("otherActionList");
+    if (!list) return;
+    const row = document.createElement("div");
+    row.className = "other-action-entry";
+    row.innerHTML = `
+        <div class="other-action-top">
+            <input class="other-action-name-input" type="text" placeholder="Action name…" value="${escHtml(name)}" maxlength="60" />
+            <button class="action-entry-del-btn" title="Remove action">✕</button>
+        </div>
+        <input class="other-action-desc-input" type="text" placeholder="Description, effect, stat used…" value="${escHtml(desc)}" maxlength="150" />
+    `;
+    row.querySelector(".action-entry-del-btn").addEventListener("click", () => { row.remove(); scheduleAutoSave(); });
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", scheduleAutoSave));
+    list.appendChild(row);
+    if (!name) row.querySelector(".other-action-name-input").focus();
+}
+
+function collectOtherActions() {
+    const items = [];
+    document.querySelectorAll(".other-action-entry").forEach(row => {
+        const name = row.querySelector(".other-action-name-input")?.value.trim();
+        const desc = row.querySelector(".other-action-desc-input")?.value.trim();
+        if (name || desc) items.push({ name: name || "", desc: desc || "" });
+    });
+    return items;
+}
+
+document.getElementById("addOtherActionBtn")?.addEventListener("click", () => {
+    addOtherActionRow();
+    scheduleAutoSave();
 });
 
 // ════════════════════════════════════════════════════════════

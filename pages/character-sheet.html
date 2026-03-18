@@ -509,20 +509,32 @@
                         <div class="section-header-row">
                             <span class="section-label">Actions</span>
                         </div>
-                        <div class="action-row">
-                            <span class="action-label">Weapon</span>
-                            <span class="action-sub">Primary stat, possible secondary</span>
-                            <div class="action-input" contenteditable="true" data-field="action_weapon" data-placeholder="Weapon name, stat…"></div>
+
+                        <!-- Weapons subsection -->
+                        <div class="action-subsection">
+                            <div class="action-subsection-header">
+                                <span class="action-sub-label">Weapons</span>
+                                <button class="action-add-btn" id="addWeaponBtn">＋ Add Weapon</button>
+                            </div>
+                            <div class="action-entry-list" id="weaponList"></div>
                         </div>
-                        <div class="action-row">
-                            <span class="action-label">Spell</span>
-                            <span class="action-sub">Primary stat</span>
-                            <div class="action-input" contenteditable="true" data-field="action_spell" data-placeholder="Spell name, stat…"></div>
+
+                        <!-- Spell Actions subsection -->
+                        <div class="action-subsection">
+                            <div class="action-subsection-header">
+                                <span class="action-sub-label">Spell Slots</span>
+                                <button class="action-add-btn" id="addSpellActionBtn">＋ Add Slot</button>
+                            </div>
+                            <div class="action-entry-list" id="spellActionList"></div>
                         </div>
-                        <div class="action-row">
-                            <span class="action-label">Other</span>
-                            <span class="action-sub">Other kinds of actions</span>
-                            <div class="action-input" contenteditable="true" data-field="action_other" data-placeholder="Other actions…"></div>
+
+                        <!-- Other Actions subsection -->
+                        <div class="action-subsection">
+                            <div class="action-subsection-header">
+                                <span class="action-sub-label">Other</span>
+                                <button class="action-add-btn" id="addOtherActionBtn">＋ Add Action</button>
+                            </div>
+                            <div class="action-entry-list" id="otherActionList"></div>
                         </div>
                     </div>
 
@@ -532,20 +544,21 @@
                             <span class="section-label">Equipment</span>
                             <span class="field-sub">Press Enter to add item</span>
                         </div>
-                        <div class="inventory-list" id="inventoryList"></div>
+                        <div class="inventory-scroll-wrap">
+                            <div class="inventory-list" id="inventoryList"></div>
+                        </div>
                         <button class="add-contact-btn" id="addInventoryBtn">＋ Add Item</button>
                     </div>
 
-                    <!-- Spells placeholder -->
+                    <!-- Spells -->
                     <div class="sheet-card spells-card">
                         <div class="section-header-row">
                             <span class="section-label">Spells</span>
-                            <span class="coming-soon-badge">Coming Soon</span>
                         </div>
-                        <div class="coming-soon-block">
-                            <span class="coming-rune" aria-hidden="true">ᚲ</span>
-                            <p>The arcane registry is still being inscribed.<br />This section will be available in a future update.</p>
+                        <div class="spell-scroll-wrap">
+                            <div class="spell-list" id="spellList"></div>
                         </div>
+                        <button class="add-contact-btn" id="addSpellBtn">＋ Add Spell</button>
                     </div>
 
                 </div><!-- /sheet-right -->
