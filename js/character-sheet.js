@@ -281,7 +281,14 @@ function populateSheet(data) {
     // Input fields (number + text)
     document.querySelectorAll("input[data-field]").forEach(el => {
         const key = el.dataset.field;
-        if (data[key] !== undefined) el.value = data[key];
+        if (data[key] !== undefined) {
+            // For stat inputs, don't render 0 — let the placeholder show instead
+            if (el.classList.contains("stat-val") && data[key] === 0) {
+                el.value = "";
+            } else {
+                el.value = data[key];
+            }
+        }
     });
     // Select fields
     document.querySelectorAll("select[data-field]").forEach(el => {
