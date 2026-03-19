@@ -14,7 +14,7 @@ import { auth, db } from "../auth/firebase-config.js";
 import { onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-    collection, doc, getDoc, getDocs, setDoc, deleteDoc,
+    collection, doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc,
     serverTimestamp, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -313,6 +313,14 @@ function populateSheet(data) {
     updateThreadBar(data.fate_thread_status || "intact");
     // Health state
     updateHealthState();
+    // Roll history — load from saved data, clear if none
+    rollHistoryLog = Array.isArray(data.rollHistory) ? data.rollHistory : [];
+    renderHistory();
+    rhToggleCount.textContent = rollHistoryLog.length;
+    rollHistoryLog.length > 0
+        ? rhToggleCount.classList.remove("hidden")
+        : rhToggleCount.classList.add("hidden");
+
     isDirty = false;
 }
 
@@ -333,6 +341,10 @@ function clearSheet() {
     recalcAll();
     updatePolarity(0);
     updateThreadBar("intact");
+    // Clear roll history display when no sheet is loaded
+    rollHistoryLog = [];
+    renderHistory();
+    rhToggleCount.classList.add("hidden");
     isDirty = false;
     updateDelBtn();             // ← hide delete button now that no sheet is loaded
 }
@@ -1299,8 +1311,21 @@ document.getElementById("rotPenaltyDismiss")?.addEventListener("click", () => {
 //  ROLL HISTORY
 // ════════════════════════════════════════════════════════════
 
-let rollHistoryLog = [];   // session-only, not saved to Firebase
+let rollHistoryLog = [];   // mirrors sheetData.rollHistory; persisted to Firestore
 const MAX_HISTORY = 10;
+
+// ── Persist roll history to Firestore ────────────────────────
+async function saveRollHistory() {
+    if (!currentSheetId || !currentUser || isStoryteller) return;
+    try {
+        await updateDoc(
+            doc(db, "character-sheets", currentUser.uid, "sheets", currentSheetId),
+            { rollHistory: rollHistoryLog }
+        );
+    } catch (err) {
+        console.error("Failed to save roll history:", err);
+    }
+}
 
 const rhToggleBtn = document.getElementById("rhToggleBtn");
 const rhToggleCount = document.getElementById("rhToggleCount");
@@ -1316,6 +1341,8 @@ function addToHistory(diceCount, rolls, passes, tier) {
     // Update badge count
     rhToggleCount.textContent = rollHistoryLog.length;
     rhToggleCount.classList.remove("hidden");
+    // Persist to Firestore for this character
+    saveRollHistory();
 }
 
 function renderHistory() {
@@ -1355,6 +1382,8 @@ rhClear?.addEventListener("click", () => {
     rollHistoryLog = [];
     renderHistory();
     rhToggleCount.classList.add("hidden");
+    // Permanently wipe from Firestore
+    saveRollHistory();
 });
 
 // ════════════════════════════════════════════════════════════
