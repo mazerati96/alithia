@@ -59,6 +59,15 @@
                 <span class="topbar-divider">|</span>
                 <span class="topbar-label">Storyteller Sheet</span>
             </div>
+            <div class="st-topbar-center">
+                <div class="tale-switcher" id="taleSwitcher">
+                    <select class="tale-select" id="taleSelect">
+                        <option value="">— Select Tale —</option>
+                    </select>
+                    <button class="tale-new-btn" id="taleNewBtn" title="New tale">＋</button>
+                    <button class="tale-del-btn hidden" id="taleDelBtn" title="Delete this tale">🗑</button>
+                </div>
+            </div>
             <div class="st-topbar-right">
                 <span class="st-save-status" id="saveStatus"></span>
                 <button class="st-topbar-btn" id="stSaveBtn"><span class="btn-glyph">✦</span> Save</button>
@@ -186,6 +195,44 @@
         </section>
 
     </div><!-- /st-sheet-wrap -->
+    <!-- ── New Tale Modal ────────────────────────────────────── -->
+    <div class="st-modal-backdrop hidden" id="newTaleModalBackdrop">
+        <div class="st-modal-box">
+            <button class="st-modal-close" id="newTaleModalClose">✕</button>
+            <div class="st-modal-title">New Tale</div>
+            <p class="st-modal-hint">Give this tale a name to begin your chronicle.</p>
+            <div class="st-modal-form">
+                <label class="st-modal-label">Tale Name</label>
+                <input type="text" class="st-modal-input" id="newTaleNameInput"
+                       placeholder="Enter tale name…" maxlength="60" />
+                <div class="st-form-message" id="newTaleMsg"></div>
+                <button class="st-modal-create-btn" id="newTaleCreateBtn">Begin Tale</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Delete Tale Modal ─────────────────────────────────── -->
+    <div class="st-modal-backdrop hidden" id="delTaleModalBackdrop">
+        <div class="st-modal-box st-modal-box-danger">
+            <button class="st-modal-close" id="delTaleModalClose">✕</button>
+            <div class="st-modal-title st-danger-title">Delete Tale</div>
+            <p class="st-modal-hint st-danger-hint">
+                This cannot be undone. All data for
+                <strong id="delTaleNameDisplay">this tale</strong>
+                will be permanently erased.
+            </p>
+            <div class="st-modal-form">
+                <p class="st-modal-confirm-label">Type the tale name to confirm:</p>
+                <input type="text" class="st-modal-input" id="delTaleConfirmInput"
+                       placeholder="Tale name…" maxlength="60" autocomplete="off" />
+                <div class="st-form-message" id="delTaleMsg"></div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+                    <button class="st-del-cancel-btn" id="delTaleCancelBtn">Cancel</button>
+                    <button class="st-del-confirm-btn" id="delTaleConfirmBtn" disabled>Delete Forever</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="../js/navigation.js"></script>
     <script type="module" src="../js/storyteller-sheet.js"></script>

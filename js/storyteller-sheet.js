@@ -10,7 +10,7 @@ import { auth, db } from "../auth/firebase-config.js";
 import { onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-    collection, doc, getDoc, getDocs, setDoc,
+    collection, doc, getDoc, getDocs, setDoc, deleteDoc,
     serverTimestamp, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -39,9 +39,10 @@ resizeCanvas(); initParticles(); requestAnimationFrame(drawParticles);
 
 // ── State ────────────────────────────────────────────────────
 let currentUser = null;
-let allPlayers = {};        // uid → { name, email, uid }
-let allCharacters = [];     // flat list of all player character docs
-let stSheetData = {};       // ST's own persisted data
+let currentTaleId = null;       // active tale doc ID
+let allPlayers = {};            // uid → { name, email, uid }
+let allCharacters = [];         // flat list of all player character docs
+let stSheetData = {};           // ST's own persisted data for current tale
 let saveTimeout = null;
 let isDirty = false;
 let showExcluded = false;
@@ -71,6 +72,24 @@ const addNpcBtn = document.getElementById("addNpcBtn");
 const eventsList = document.getElementById("eventsList");
 const eventsEmpty = document.getElementById("eventsEmpty");
 const addEventBtn = document.getElementById("addEventBtn");
+// Tale selector
+const taleSelect = document.getElementById("taleSelect");
+const taleNewBtn = document.getElementById("taleNewBtn");
+const taleDelBtn = document.getElementById("taleDelBtn");
+// New tale modal
+const newTaleModal = document.getElementById("newTaleModalBackdrop");
+const newTaleModalClose = document.getElementById("newTaleModalClose");
+const newTaleNameInput = document.getElementById("newTaleNameInput");
+const newTaleMsg = document.getElementById("newTaleMsg");
+const newTaleCreateBtn = document.getElementById("newTaleCreateBtn");
+// Delete tale modal
+const delTaleModal = document.getElementById("delTaleModalBackdrop");
+const delTaleModalClose = document.getElementById("delTaleModalClose");
+const delTaleCancelBtn = document.getElementById("delTaleCancelBtn");
+const delTaleConfirmBtn = document.getElementById("delTaleConfirmBtn");
+const delTaleConfirmInput = document.getElementById("delTaleConfirmInput");
+const delTaleMsg = document.getElementById("delTaleMsg");
+const delTaleNameDisplay = document.getElementById("delTaleNameDisplay");
 
 // ── Auth guard ───────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
@@ -120,34 +139,86 @@ signOutBtn?.addEventListener("click", async () => {
 
 // ── Load all data ────────────────────────────────────────────
 async function loadAll() {
-    // 1. Load ST's own sheet first (needed for overrides during render)
-    await loadStSheet();
-    // 2. Load all player characters
+    await loadTaleList();
     await loadPlayerData();
 }
 
-async function loadStSheet() {
+// ── Tale list ────────────────────────────────────────────────
+async function loadTaleList() {
     try {
-        const snap = await getDoc(doc(db, "storyteller-sheets", currentUser.uid));
-        if (snap.exists()) {
-            stSheetData = snap.data();
+        const snap = await getDocs(
+            query(collection(db, "storyteller-sheets", currentUser.uid, "tales"), orderBy("createdAt", "asc"))
+        );
+        taleSelect.innerHTML = `<option value="">— Select Tale —</option>`;
+        snap.forEach(d => {
+            const opt = document.createElement("option");
+            opt.value = d.id;
+            opt.textContent = d.data().taleName || "Unnamed Tale";
+            taleSelect.appendChild(opt);
+        });
+
+        // Auto-load last used tale
+        const lastId = sessionStorage.getItem("alithia_last_tale");
+        if (lastId && taleSelect.querySelector(`option[value="${lastId}"]`)) {
+            taleSelect.value = lastId;
+            await loadTale(lastId);
         } else {
-            stSheetData = {
-                playerOverrides: {},
-                sessions: [],
-                npcs: [],
-                worldEvents: [],
-                campaignNotes: ""
-            };
+            showNoTaleState();
         }
     } catch (err) {
-        console.error("ST sheet load failed:", err);
-        stSheetData = { playerOverrides: {}, sessions: [], npcs: [], worldEvents: [], campaignNotes: "" };
+        console.error("Tale list load failed:", err);
+        showNoTaleState();
     }
+}
 
-    // Populate non-player sections immediately
-    populateWorldTab();
-    renderSessionLog();
+function showNoTaleState() {
+    clearSheetUI();
+    updateDelBtn();
+}
+
+async function loadTale(id) {
+    try {
+        const snap = await getDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", id));
+        if (!snap.exists()) return;
+        currentTaleId = id;
+        sessionStorage.setItem("alithia_last_tale", id);
+        stSheetData = snap.data();
+        populateWorldTab();
+        renderSessionLog();
+        renderPlayerTracker();
+        updateDelBtn();
+    } catch (err) {
+        console.error("Tale load failed:", err);
+    }
+}
+
+function clearSheetUI() {
+    currentTaleId = null;
+    stSheetData = {};
+    // Clear session log
+    if (sessionLogList) sessionLogList.innerHTML = "";
+    if (sessionsEmpty) sessionsEmpty.classList.remove("hidden");
+    // Clear world tab
+    if (campaignNotes) campaignNotes.innerHTML = "";
+    if (npcList) npcList.innerHTML = "";
+    if (npcEmpty) npcEmpty.classList.remove("hidden");
+    if (eventsList) eventsList.innerHTML = "";
+    if (eventsEmpty) eventsEmpty.classList.remove("hidden");
+    // Clear players
+    if (playersList) playersList.innerHTML = "";
+    isDirty = false;
+}
+
+taleSelect?.addEventListener("change", async () => {
+    const id = taleSelect.value;
+    if (!id) { clearSheetUI(); updateDelBtn(); return; }
+    if (isDirty && currentTaleId) await saveStSheet();
+    await loadTale(id);
+});
+
+// ── Tale: load story sheet ───────────────────────────────────
+async function loadStSheet() {
+    // no-op — replaced by loadTale(); kept for compat
 }
 
 async function loadPlayerData() {
@@ -195,7 +266,7 @@ async function loadPlayerData() {
     }
 
     playersLoading.style.display = "none";
-    renderPlayerTracker();
+    if (currentTaleId) renderPlayerTracker();
 }
 
 // ── Tab navigation ───────────────────────────────────────────
@@ -732,7 +803,7 @@ function scheduleAutoSave() {
 }
 
 async function saveStSheet() {
-    if (!currentUser) return;
+    if (!currentUser || !currentTaleId) return;
 
     const data = {
         playerOverrides: stSheetData.playerOverrides || {},
@@ -740,12 +811,14 @@ async function saveStSheet() {
         npcs: stSheetData.npcs || [],
         worldEvents: stSheetData.worldEvents || [],
         campaignNotes: campaignNotes ? campaignNotes.innerHTML : (stSheetData.campaignNotes || ""),
+        taleName: stSheetData.taleName || "Unnamed Tale",
+        createdAt: stSheetData.createdAt || serverTimestamp(),
         updatedAt: serverTimestamp(),
         uid: currentUser.uid,
     };
 
     try {
-        await setDoc(doc(db, "storyteller-sheets", currentUser.uid), data, { merge: true });
+        await setDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", currentTaleId), data, { merge: true });
         stSheetData = { ...stSheetData, ...data };
         isDirty = false;
         showSaveStatus("✦ Saved", false);
@@ -763,6 +836,122 @@ function showSaveStatus(msg, isError) {
     saveStatusEl.className = "st-save-status visible" + (isError ? " error" : "");
     setTimeout(() => saveStatusEl.classList.remove("visible"), 2500);
 }
+
+function updateDelBtn() {
+    if (taleDelBtn) taleDelBtn.classList.toggle("hidden", !currentTaleId);
+}
+
+// ── New tale modal ────────────────────────────────────────────
+taleNewBtn?.addEventListener("click", () => {
+    newTaleNameInput.value = "";
+    newTaleMsg.textContent = "";
+    newTaleMsg.className = "st-form-message";
+    newTaleModal.classList.remove("hidden");
+    setTimeout(() => newTaleNameInput.focus(), 50);
+});
+
+newTaleModalClose?.addEventListener("click", () => newTaleModal.classList.add("hidden"));
+newTaleModal?.addEventListener("click", (e) => { if (e.target === newTaleModal) newTaleModal.classList.add("hidden"); });
+newTaleNameInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") newTaleCreateBtn.click(); });
+
+newTaleCreateBtn?.addEventListener("click", async () => {
+    const name = newTaleNameInput.value.trim();
+    if (!name) {
+        newTaleMsg.textContent = "Please enter a tale name.";
+        newTaleMsg.className = "st-form-message error";
+        return;
+    }
+    newTaleCreateBtn.disabled = true;
+    newTaleCreateBtn.textContent = "Creating…";
+    try {
+        const newId = `tale_${Date.now()}`;
+        const newData = {
+            taleName: name,
+            uid: currentUser.uid,
+            playerOverrides: {},
+            sessions: [],
+            npcs: [],
+            worldEvents: [],
+            campaignNotes: "",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+        await setDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", newId), newData);
+        const opt = document.createElement("option");
+        opt.value = newId;
+        opt.textContent = name;
+        taleSelect.appendChild(opt);
+        taleSelect.value = newId;
+        newTaleModal.classList.add("hidden");
+        if (isDirty) await saveStSheet();
+        clearSheetUI();
+        await loadTale(newId);
+    } catch (err) {
+        console.error("Tale create failed:", err);
+        newTaleMsg.textContent = "Could not create tale. Try again.";
+        newTaleMsg.className = "st-form-message error";
+    }
+    newTaleCreateBtn.disabled = false;
+    newTaleCreateBtn.textContent = "Begin Tale";
+});
+
+// ── Delete tale modal ─────────────────────────────────────────
+taleDelBtn?.addEventListener("click", () => {
+    if (!currentTaleId) return;
+    const taleName = stSheetData.taleName || "this tale";
+    delTaleNameDisplay.textContent = taleName;
+    delTaleConfirmInput.value = "";
+    delTaleConfirmBtn.disabled = true;
+    delTaleMsg.textContent = "";
+    delTaleMsg.className = "st-form-message";
+    delTaleModal.classList.remove("hidden");
+    setTimeout(() => delTaleConfirmInput.focus(), 50);
+});
+
+delTaleConfirmInput?.addEventListener("input", () => {
+    const taleName = stSheetData.taleName || "";
+    delTaleConfirmBtn.disabled = delTaleConfirmInput.value.trim() !== taleName;
+    delTaleMsg.textContent = "";
+});
+
+function closeDelTaleModal() {
+    delTaleModal.classList.add("hidden");
+    delTaleConfirmInput.value = "";
+    delTaleConfirmBtn.disabled = true;
+}
+
+delTaleModalClose?.addEventListener("click", closeDelTaleModal);
+delTaleCancelBtn?.addEventListener("click", closeDelTaleModal);
+delTaleModal?.addEventListener("click", (e) => { if (e.target === delTaleModal) closeDelTaleModal(); });
+
+delTaleConfirmBtn?.addEventListener("click", async () => {
+    if (!currentTaleId || !currentUser) return;
+    delTaleConfirmBtn.disabled = true;
+    delTaleConfirmBtn.textContent = "Deleting…";
+    try {
+        await deleteDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", currentTaleId));
+        const opt = taleSelect.querySelector(`option[value="${currentTaleId}"]`);
+        if (opt) opt.remove();
+        clearSheetUI();
+        updateDelBtn();
+        taleSelect.value = "";
+        closeDelTaleModal();
+        showSaveStatus("Tale deleted", false);
+    } catch (err) {
+        console.error("Delete failed:", err);
+        delTaleMsg.textContent = "Delete failed — check your connection.";
+        delTaleMsg.className = "st-form-message error";
+        delTaleConfirmBtn.disabled = false;
+        delTaleConfirmBtn.textContent = "Delete Forever";
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        newTaleModal?.classList.add("hidden");
+        delTaleModal?.classList.add("hidden");
+    }
+});
 
 window.addEventListener("beforeunload", (e) => {
     if (isDirty) { e.preventDefault(); e.returnValue = ""; }
