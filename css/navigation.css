@@ -8,7 +8,7 @@
 /* ── Hamburger button ──────────────────────────────────────── */
 .hamburger-menu {
     position: fixed;
-    top: 30px; /* adjusted from 24 px to make it lower*/
+    top: 34px; /* adjusted from 24 px to make it lower*/
     right: 24px;
     z-index: 100;
     cursor: pointer;
