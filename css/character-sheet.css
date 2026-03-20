@@ -3691,7 +3691,7 @@ html, body {
 }
 
     .session-notes-card:hover {
-        border-color: rgba(255,184,77,0.35);
+        border-color: #FFD700;
     }
 
 .session-notes-badge {
@@ -3699,7 +3699,7 @@ html, body {
     font-size: 0.38rem;
     letter-spacing: 0.15em;
     color: var(--warn);
-    border: 1px solid rgba(255,184,77,0.3);
+    border: 1px solid #FFD700;
     padding: 0.12rem 0.45rem;
     margin-left: auto;
 }
@@ -3708,18 +3708,18 @@ html, body {
     font-family: var(--font-body);
     font-style: italic;
     font-size: 0.78rem;
-    color: rgba(255,184,77,0.4);
+    color: #FFD700;
     line-height: 1.5;
     padding: 0 0.1rem;
 }
 
 .session-notes-area {
     min-height: 100px;
-    border-color: rgba(255,184,77,0.15) !important;
+    border-color: #FFD700 !important;
 }
 
     .session-notes-area:focus {
-        border-color: rgba(255,184,77,0.35) !important;
+        border-color: #FFD700 !important;
     }
 
 /* ── Roll history ───────────────────────────────────────────── */
