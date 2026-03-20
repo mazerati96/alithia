@@ -3687,7 +3687,7 @@ html, body {
 /* ── Session notes ──────────────────────────────────────────── */
 .session-notes-card {
     grid-column: 1 / -1;
-    border-color: rgba(255, 215, 0);
+    border-color: #FFD700;
 }
 
     .session-notes-card:hover {
