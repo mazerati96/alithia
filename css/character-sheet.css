@@ -2557,7 +2557,7 @@ html, body {
         padding: 0 0.6rem;
     }
 }
-
+ /* ADDED CODE FROM INTELLISENSE TO MAKE MEDIA BIGGER*/
 /* ════════════════════════════════════════════════════════════
    LARGE SCREEN — expands layout on 1440px+ monitors
    Same layout, same structure — just wider and bigger
@@ -2738,6 +2738,8 @@ html, body {
         gap: 0.85rem;
     }
 }
+
+/* END OF ADDED CODE */
 
 /* ════════════════════════════════════════════════════════════
    PRINT STYLES — white background PDF
@@ -3685,7 +3687,7 @@ html, body {
 /* ── Session notes ──────────────────────────────────────────── */
 .session-notes-card {
     grid-column: 1 / -1;
-    border-color: rgba(255,184,77,0.2);
+    border-color: rgba(255, 215, 0);
 }
 
     .session-notes-card:hover {
