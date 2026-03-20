@@ -2503,6 +2503,23 @@ html, body {
     }
 
 /* ── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 1920px) {
+    .sheet-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sheet-right {
+        grid-row: 2;
+    }
+
+    .systems-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+   
+
 @media (max-width: 1100px) {
     .sheet-grid {
         grid-template-columns: 1fr;
