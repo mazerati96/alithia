@@ -221,7 +221,7 @@ html, body {
     padding: 0.85rem 2.5rem;
     position: relative;
     opacity: 0;
-    animation: fade-up 1s ease forwards 2s;
+    animation: fade-up 0.5s ease forwards 1s; /* adjusted from 1s fade up and 2s ease forward to faster time*/
     transition: color 0.3s, border-color 0.3s, box-shadow 0.3s;
     overflow: hidden;
 }
