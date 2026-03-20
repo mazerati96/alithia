@@ -2559,6 +2559,187 @@ html, body {
 }
 
 /* ════════════════════════════════════════════════════════════
+   LARGE SCREEN — expands layout on 1440px+ monitors
+   Same layout, same structure — just wider and bigger
+════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1440px) {
+
+    /* Widen the main content container */
+    .sheet-section {
+        max-width: 1700px;
+        padding: 2rem 2rem 3rem;
+    }
+
+    /* Wider right sidebar — grows from fixed 340px */
+    .sheet-grid {
+        grid-template-columns: 1fr 420px;
+        gap: 1.25rem;
+    }
+
+    /* Slightly larger base text so everything scales up */
+    .sheet-card {
+        padding: 1.1rem 1.25rem;
+    }
+
+    /* Stat values bigger */
+    .stat-val {
+        width: 52px;
+        font-size: 0.85rem;
+    }
+
+    /* Skill inputs a touch wider */
+    .skill-val {
+        width: 38px;
+    }
+
+    /* Section labels breathe more */
+    .section-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.24em;
+    }
+
+    /* Identity fields */
+    .identity-field .field-input {
+        font-size: 0.95rem;
+    }
+
+    /* Stats col gap */
+    .stats-columns {
+        gap: 0.75rem;
+    }
+
+    /* Skills gap */
+    .skills-grid {
+        gap: 0.9rem;
+    }
+
+    /* Systems tab — wider cards */
+    .systems-grid {
+        gap: 1.25rem;
+    }
+
+    /* Status blocks */
+    .status-name {
+        font-size: 0.52rem;
+        letter-spacing: 0.2em;
+        min-width: 60px;
+    }
+
+    /* HP stepper input */
+    .hp-stepper-input {
+        width: 70px;
+        font-size: 1.1rem;
+    }
+
+    .hp-step-btn {
+        width: 34px;
+        height: 40px;
+    }
+
+    /* Protection / resilience values */
+    .prot-val, .res-val {
+        font-size: 0.85rem;
+    }
+
+    /* Polarity slider wider feel */
+    .polarity-track {
+        height: 16px;
+    }
+
+    /* Tab nav font */
+    .sheet-tab {
+        font-size: 0.55rem;
+        padding: 0 1.5rem;
+    }
+
+    /* Topbar breathing room */
+    .sheet-topbar {
+        padding: 0 2rem;
+    }
+
+    .sheet-tabnav {
+        padding: 0 2rem;
+    }
+
+    /* Dice bar */
+    .dice-bar {
+        padding: 0 2rem;
+    }
+}
+
+@media (min-width: 1920px) {
+
+    .sheet-section {
+        max-width: 2000px;
+        padding: 2rem 2.5rem 3rem;
+    }
+
+    .sheet-grid {
+        grid-template-columns: 1fr 480px;
+        gap: 1.5rem;
+    }
+
+    /* Bump base font slightly so text fills the extra space */
+    body {
+        font-size: 17px;
+    }
+
+    .stat-val {
+        width: 56px;
+        font-size: 0.9rem;
+    }
+
+    .skill-val {
+        width: 42px;
+    }
+
+    .stats-columns {
+        gap: 0.9rem;
+    }
+
+    .skills-grid {
+        gap: 1rem;
+    }
+
+    .systems-grid {
+        gap: 1.5rem;
+    }
+
+    .sheet-tab {
+        font-size: 0.58rem;
+        padding: 0 1.75rem;
+    }
+
+    .sheet-topbar {
+        padding: 0 2.5rem;
+    }
+
+    .sheet-tabnav {
+        padding: 0 2.5rem;
+    }
+
+    .dice-bar {
+        padding: 0 2.5rem;
+    }
+
+    /* Roll history panel shifts right with wider bar */
+    .rh-toggle-btn {
+        right: 2.5rem;
+    }
+
+    .roll-history {
+        right: 2.5rem;
+    }
+
+    /* Sheet cards a bit more padded */
+    .sheet-card {
+        padding: 1.25rem 1.4rem;
+        gap: 0.85rem;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
    PRINT STYLES — white background PDF
 ════════════════════════════════════════════════════════════ */
 @media print {
