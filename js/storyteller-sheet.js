@@ -147,7 +147,7 @@ async function loadAll() {
 async function loadTaleList() {
     try {
         const snap = await getDocs(
-            query(collection(db, "storyteller-sheets", currentUser.uid, "tales"), orderBy("createdAt", "asc"))
+            query(collection(db, "storyteller-tales"), orderBy("createdAt", "asc"))
         );
         taleSelect.innerHTML = `<option value="">— Select Tale —</option>`;
         snap.forEach(d => {
@@ -178,7 +178,7 @@ function showNoTaleState() {
 
 async function loadTale(id) {
     try {
-        const snap = await getDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", id));
+        const snap = await getDoc(doc(db, "storyteller-tales", id));
         if (!snap.exists()) return;
         currentTaleId = id;
         sessionStorage.setItem("alithia_last_tale", id);
@@ -818,7 +818,7 @@ async function saveStSheet() {
     };
 
     try {
-        await setDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", currentTaleId), data, { merge: true });
+        await setDoc(doc(db, "storyteller-tales", currentTaleId), data, { merge: true });
         stSheetData = { ...stSheetData, ...data };
         isDirty = false;
         showSaveStatus("✦ Saved", false);
@@ -876,7 +876,7 @@ newTaleCreateBtn?.addEventListener("click", async () => {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
-        await setDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", newId), newData);
+        await setDoc(doc(db, "storyteller-tales", newId), newData);
         const opt = document.createElement("option");
         opt.value = newId;
         opt.textContent = name;
@@ -929,7 +929,7 @@ delTaleConfirmBtn?.addEventListener("click", async () => {
     delTaleConfirmBtn.disabled = true;
     delTaleConfirmBtn.textContent = "Deleting…";
     try {
-        await deleteDoc(doc(db, "storyteller-sheets", currentUser.uid, "tales", currentTaleId));
+        await deleteDoc(doc(db, "storyteller-tales", currentTaleId));
         const opt = taleSelect.querySelector(`option[value="${currentTaleId}"]`);
         if (opt) opt.remove();
         clearSheetUI();
