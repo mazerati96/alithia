@@ -1698,12 +1698,16 @@ function _renderTaleSections(taleId, myKey) {
     _companyAllChars.forEach(char => {
         const key = `${char.ownerUid}__${char.id}`;
         if (key === myKey) return; // skip own character
-        if (tale?.playerOverrides?.[key]?.excluded === true) {
-            inWorld.push(char);
-        } else {
+        const override = tale?.playerOverrides?.[key];
+        if (override && override.excluded !== true) {
+            // ST has an entry for this character AND hasn't excluded them = active in tale
             inTale.push(char);
+        } else {
+            // No entry (never touched in ST sheet) OR explicitly excluded = also in the world
+            inWorld.push(char);
         }
     });
+
 
     if (inCount) inCount.textContent = inTale.length;
     if (wCount) wCount.textContent = inWorld.length;
