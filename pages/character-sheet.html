@@ -85,6 +85,9 @@
             <button class="sheet-tab" data-tab="systems">
                 <span class="tab-rune">ᚦ</span> Rot · Fate · Polarity
             </button>
+            <button class="sheet-tab" data-tab="company">
+                <span class="tab-rune">ᛜ</span> The Company
+            </button>
         </nav>
 
         <!-- ── Save status bar ────────────────────────────────── -->
@@ -840,7 +843,176 @@
             </div><!-- /systems-grid -->
         </section>
 
+        <!-- ══════════════════════════════════════════════════════
+             TAB 4 — THE COMPANY
+        ══════════════════════════════════════════════════════════ -->
+        <section class="sheet-section" id="tab-company">
+            <div class="company-wrap">
+
+                <!-- Loading -->
+                <div class="company-loading" id="companyLoading">
+                    <span class="loading-rune">ᛜ</span>
+                    <span>Gathering the company…</span>
+                </div>
+
+                <!-- Tale bar — shown when in at least one tale -->
+                <div class="company-tale-bar hidden" id="companyTaleBar">
+                    <div class="company-tale-left">
+                        <span class="company-tale-eyebrow">ACTIVE TALE</span>
+                        <select class="company-tale-select" id="companyTaleSelect"></select>
+                    </div>
+                </div>
+
+                <!-- Untethered state — not in any tale -->
+                <div class="company-untethered hidden" id="companyUntethered">
+                    <span class="company-untethered-rune">ᛜ</span>
+                    <p class="company-untethered-title" id="companyUntetheredTitle">Not yet bound to a Tale</p>
+                    <p class="company-untethered-sub" id="companyUntetheredSub">Your character has not been summoned to an active tale. All wanderers of the world are shown below.</p>
+                </div>
+
+                <!-- In this Tale section -->
+                <div class="company-section hidden" id="companySectionInTale">
+                    <div class="company-section-head">
+                        <span class="company-section-glyph">✦</span>
+                        <span class="company-section-title">In This Tale</span>
+                        <span class="company-section-count" id="companyInTaleCount">0</span>
+                    </div>
+                    <div class="company-grid" id="companyInTaleGrid"></div>
+                </div>
+
+                <!-- Also in the World section -->
+                <div class="company-section" id="companySectionWorld">
+                    <div class="company-section-head">
+                        <span class="company-section-glyph">◌</span>
+                        <span class="company-section-title" id="companyWorldTitle">Also in the World</span>
+                        <span class="company-section-count" id="companyWorldCount">0</span>
+                    </div>
+                    <div class="company-grid" id="companyWorldGrid"></div>
+                </div>
+
+            </div>
+        </section>
+
+
+
     </div><!-- /sheet-wrap -->
+    <!-- ── Company Drawer ──────────────────────────────────────── -->
+    <div class="drawer-backdrop hidden" id="companyDrawerBackdrop">
+        <div class="char-drawer" id="companyDrawer">
+
+            <div class="drawer-topbar">
+                <div class="drawer-title-group">
+                    <span class="drawer-char-name" id="cdrCharName">—</span>
+                    <span class="drawer-player-name" id="cdrPlayerName">—</span>
+                </div>
+                <div class="drawer-actions">
+                    <a class="drawer-open-btn" id="cdrOpenBtn" href="#" target="_blank">
+                        Open Sheet ↗
+                    </a>
+                    <button class="drawer-close" id="companyDrawerClose">✕</button>
+                </div>
+            </div>
+
+            <div class="drawer-body">
+                <div class="drawer-loading" id="companyDrawerLoading">
+                    <span class="loading-rune">ᛜ</span>
+                    <span>Loading character…</span>
+                </div>
+                <div class="drawer-content hidden" id="companyDrawerContent">
+
+                    <!-- Identity -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Identity</div>
+                        <div class="dr-fields-row">
+                            <div class="dr-field"><span class="dr-label">Pronouns</span><span class="dr-val" id="cdrPronouns">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Species</span><span class="dr-val" id="cdrSpecies">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Class / Level</span><span class="dr-val" id="cdrClassLevel">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Origin</span><span class="dr-val" id="cdrOrigin">—</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Stats</div>
+                        <div class="dr-stats-grid">
+                            <div class="dr-stat-group martial">
+                                <div class="dr-stat-header">Martial</div>
+                                <div class="dr-stat-row"><span>Fortitude</span><span class="dr-stat-val" id="cdrFortitude">0</span></div>
+                                <div class="dr-stat-row"><span>Muscle</span><span class="dr-stat-val" id="cdrMuscle">0</span></div>
+                                <div class="dr-stat-row"><span>Swiftness</span><span class="dr-stat-val" id="cdrSwiftness">0</span></div>
+                            </div>
+                            <div class="dr-stat-group mind">
+                                <div class="dr-stat-header">Mind</div>
+                                <div class="dr-stat-row"><span>Keenness</span><span class="dr-stat-val" id="cdrKeeness">0</span></div>
+                                <div class="dr-stat-row"><span>Wisdom</span><span class="dr-stat-val" id="cdrWisdom">0</span></div>
+                                <div class="dr-stat-row"><span>Charm</span><span class="dr-stat-val" id="cdrCharm">0</span></div>
+                            </div>
+                            <div class="dr-stat-group magic">
+                                <div class="dr-stat-header">Magic</div>
+                                <div class="dr-stat-row"><span>Faith</span><span class="dr-stat-val" id="cdrFaith">0</span></div>
+                                <div class="dr-stat-row"><span>Self</span><span class="dr-stat-val" id="cdrSelf">0</span></div>
+                                <div class="dr-stat-row"><span>Lore</span><span class="dr-stat-val" id="cdrLore">0</span></div>
+                            </div>
+                            <div class="dr-stat-group derived">
+                                <div class="dr-stat-header">Derived</div>
+                                <div class="dr-stat-row"><span>Vitality</span><span class="dr-stat-val" id="cdrVitality">—</span></div>
+                                <div class="dr-stat-row"><span>Tenacity</span><span class="dr-stat-val" id="cdrTenacity">—</span></div>
+                                <div class="dr-stat-row"><span>Soul</span><span class="dr-stat-val" id="cdrSoul">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Current Status</div>
+                        <div class="dr-status-row">
+                            <div class="dr-status-block">
+                                <span class="dr-status-name">Health</span>
+                                <span class="dr-status-val" id="cdrHealth">—</span>
+                            </div>
+                            <div class="dr-status-block">
+                                <span class="dr-status-name">Morale</span>
+                                <span class="dr-status-val" id="cdrMorale">—</span>
+                            </div>
+                            <div class="dr-status-block">
+                                <span class="dr-status-name">Sanity</span>
+                                <span class="dr-status-val" id="cdrSanity">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Systems -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Systems</div>
+                        <div class="dr-systems-row">
+                            <div class="dr-sys-block rot">
+                                <span class="dr-sys-label">Rot</span>
+                                <span class="dr-sys-val" id="cdrRotStatus">—</span>
+                            </div>
+                            <div class="dr-sys-block fate">
+                                <span class="dr-sys-label">Fate Points</span>
+                                <span class="dr-sys-val" id="cdrFatePoints">—</span>
+                            </div>
+                            <div class="dr-sys-block polarity">
+                                <span class="dr-sys-label">Polarity</span>
+                                <span class="dr-sys-val" id="cdrPolarity">—</span>
+                                <span class="dr-sys-sub" id="cdrPolarityBand">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backstory -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Backstory</div>
+                        <div class="dr-backstory" id="cdrBackstory">Not recorded yet.</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- ── New Character Modal ────────────────────────────────── -->
     <div class="modal-backdrop hidden" id="newCharModalBackdrop">
         <div class="modal-box">

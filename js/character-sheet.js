@@ -93,25 +93,23 @@ onAuthStateChanged(auth, async (user) => {
 
     // 🔥 CRITICAL FIX: If params exist, DO NOT silently fallback
     if (paramUid && paramSheet) {
-        if (!isStUser) {
-            console.warn("Non-storyteller tried to access storyteller view");
-            window.location.href = "storyteller-pool.html";
+        if (isStUser) {
+            // Storyteller: full read-only view with ST-only fields
+            isStoryteller = true;
+            viewingUid = paramUid;
+            showSheetUI();
+            try { await loadStorytellerView(paramUid, paramSheet); }
+            catch (err) { console.error("Storyteller load failed:", err); }
             return;
         }
-
-        // ✅ Storyteller mode
-        isStoryteller = true;
-        viewingUid = paramUid;
-
-        showSheetUI();
-
-        try {
-            await loadStorytellerView(paramUid, paramSheet);
-        } catch (err) {
-            console.error("Storyteller load failed:", err);
+        if (paramUid !== currentUser.uid) {
+            // Regular player viewing a party member's sheet — read-only, no ST fields
+            showSheetUI();
+            try { await loadPartyMemberView(paramUid, paramSheet); }
+            catch (err) { console.error("Party member view failed:", err); }
+            return;
         }
-
-        return; // 🚫 prevent fallback
+        // paramUid matches current user — fall through to normal character list load
     }
 
     // ✅ Normal player mode
@@ -222,6 +220,54 @@ async function loadStorytellerView(ownerUid, sheetId) {
         lockAllFields();
     } catch (err) {
         console.error("Failed to load storyteller view:", err);
+    }
+}
+
+// ── Party member view — non-ST player viewing a companion's sheet ─
+async function loadPartyMemberView(ownerUid, sheetId) {
+    try {
+        const topbarLabel = document.querySelector(".topbar-label");
+        if (topbarLabel) topbarLabel.textContent = "Party Member — Read Only";
+
+        const banner = document.createElement("div");
+        banner.style.cssText = `
+            position:fixed; top:calc(var(--topbar-h) + var(--tabnav-h)); left:0;right:0;z-index:77;
+            background:rgba(61,255,143,0.04);border-bottom:1px solid rgba(61,255,143,0.14);
+            padding:0.4rem 1.25rem;display:flex;align-items:center;gap:0.75rem;
+            font-family:var(--font-display);font-size:0.45rem;letter-spacing:0.2em;
+            color:rgba(61,255,143,0.45);
+        `;
+        banner.innerHTML = `
+            ✦ PARTY MEMBER — READ ONLY &nbsp;·&nbsp;
+            <a href="character-sheet.html" style="color:rgba(61,255,143,0.35);text-decoration:none;
+               font-style:italic;font-family:var(--font-body);font-size:0.8rem;letter-spacing:0;">
+                ← My Character
+            </a>
+        `;
+        document.body.appendChild(banner);
+
+        const sheetWrapEl = document.getElementById("sheetWrap");
+        if (sheetWrapEl) sheetWrapEl.style.paddingTop = "calc(var(--topbar-h) + var(--tabnav-h) + 36px)";
+
+        const snap = await getDoc(doc(db, "character-sheets", ownerUid, "sheets", sheetId));
+        if (!snap.exists()) { console.error("Sheet not found"); return; }
+
+        currentSheetId = sheetId;
+        sheetData = snap.data();
+
+        const charName = sheetData.charName || "Unnamed Character";
+        charSelect.innerHTML = `<option value="${sheetId}">${charName}</option>`;
+        charSelect.value = sheetId;
+
+        populateSheet(sheetData);
+        lockAllFields();
+
+        // Hide The Company tab — doesn't make sense when viewing someone else
+        const companyBtn = document.querySelector('[data-tab="company"]');
+        if (companyBtn) companyBtn.style.display = "none";
+
+    } catch (err) {
+        console.error("Party member view failed:", err);
     }
 }
 
@@ -1503,4 +1549,315 @@ delCharConfirmBtn?.addEventListener("click", async () => {
         delCharConfirmBtn.disabled = false;
         delCharConfirmBtn.textContent = "Delete Forever";
     }
+});
+
+// ════════════════════════════════════════════════════════════
+//  THE COMPANY TAB
+// ════════════════════════════════════════════════════════════
+
+let companyLoaded = false;
+let _companyTales = [];
+let _companyAllChars = [];
+let _companyAllPlayers = {};
+let _activeCompanyTaleId = null;
+
+// Reset when character selection changes
+charSelect.addEventListener("change", () => { companyLoaded = false; });
+
+// Lazy-load on tab click
+document.querySelector('[data-tab="company"]')?.addEventListener("click", () => {
+    if (!companyLoaded && currentSheetId && !isStoryteller) {
+        loadCompanyTab();
+    }
+});
+
+// Also load if the tab is active when a sheet first loads
+const _origLoadSheet = loadSheet;
+// We patch via charSelect change — companyLoaded reset handles re-triggering
+// If company tab is already visible when sheet loads, reload it
+charSelect.addEventListener("change", () => {
+    const companySection = document.getElementById("tab-company");
+    if (companySection?.classList.contains("active") && currentSheetId && !isStoryteller) {
+        loadCompanyTab();
+    }
+});
+
+async function loadCompanyTab() {
+    const loadingEl = document.getElementById("companyLoading");
+    const taleBarEl = document.getElementById("companyTaleBar");
+    const untethered = document.getElementById("companyUntethered");
+    const secInTale = document.getElementById("companySectionInTale");
+    const secWorld = document.getElementById("companySectionWorld");
+
+    // Show loading, hide everything else
+    if (loadingEl) { loadingEl.style.display = "flex"; loadingEl.textContent = ""; loadingEl.innerHTML = '<span class="loading-rune">ᛜ</span><span>Gathering the company…</span>'; }
+    [taleBarEl, untethered, secInTale, secWorld].forEach(el => el?.classList.add("hidden"));
+
+    try {
+        // 1 — Load all tales
+        const talesSnap = await getDocs(
+            query(collection(db, "storyteller-tales"), orderBy("createdAt", "asc"))
+        );
+        _companyTales = [];
+        talesSnap.forEach(d => _companyTales.push({ id: d.id, ...d.data() }));
+
+        // 2 — Load all users
+        _companyAllPlayers = {};
+        const usersSnap = await getDocs(collection(db, "users"));
+        usersSnap.forEach(d => {
+            _companyAllPlayers[d.id] = {
+                name: d.data().username || d.data().email || "Unknown",
+                uid: d.id,
+            };
+        });
+
+        // 3 — Load all character sheets
+        _companyAllChars = [];
+        await Promise.all(Object.keys(_companyAllPlayers).map(async (uid) => {
+            try {
+                const snap = await getDocs(
+                    query(collection(db, "character-sheets", uid, "sheets"), orderBy("updatedAt", "desc"))
+                );
+                snap.forEach(d => _companyAllChars.push({ id: d.id, ownerUid: uid, ...d.data() }));
+            } catch (_) { /* user has no sheets */ }
+        }));
+
+        if (loadingEl) loadingEl.style.display = "none";
+
+        // 4 — Find which tales include this character
+        const myKey = `${currentUser.uid}__${currentSheetId}`;
+        const myTales = _companyTales.filter(t => t.playerOverrides?.[myKey]?.excluded !== true);
+
+        if (_companyTales.length === 0) {
+            _showUntethered("No tales have been forged yet.", "All wanderers of the world are shown below.");
+            _renderWorldOnly(myKey, "All in the World");
+        } else if (myTales.length === 0) {
+            _showUntethered("Not yet summoned to a tale.", "Your character has not been called to an active tale. All wanderers of the world are shown below.");
+            _renderWorldOnly(myKey, "All in the World");
+        } else {
+            // Populate tale selector
+            const select = document.getElementById("companyTaleSelect");
+            if (select) {
+                select.innerHTML = "";
+                myTales.forEach(t => {
+                    const opt = document.createElement("option");
+                    opt.value = t.id;
+                    opt.textContent = t.taleName || "Unnamed Tale";
+                    select.appendChild(opt);
+                });
+                // Restore last-used tale or default to first
+                const saved = sessionStorage.getItem("alithia_company_tale");
+                _activeCompanyTaleId = (saved && myTales.find(t => t.id === saved))
+                    ? saved : myTales[0].id;
+                select.value = _activeCompanyTaleId;
+
+                select.addEventListener("change", () => {
+                    _activeCompanyTaleId = select.value;
+                    sessionStorage.setItem("alithia_company_tale", _activeCompanyTaleId);
+                    _renderTaleSections(_activeCompanyTaleId, myKey);
+                });
+            }
+            taleBarEl?.classList.remove("hidden");
+            _renderTaleSections(_activeCompanyTaleId, myKey);
+        }
+
+        companyLoaded = true;
+
+    } catch (err) {
+        console.error("Company tab load failed:", err);
+        if (loadingEl) loadingEl.innerHTML = `<span style="color:var(--error)">Could not load company data — check connection.</span>`;
+    }
+}
+
+function _showUntethered(title, sub) {
+    const el = document.getElementById("companyUntethered");
+    const t = document.getElementById("companyUntetheredTitle");
+    const s = document.getElementById("companyUntetheredSub");
+    if (t) t.textContent = title;
+    if (s) s.textContent = sub;
+    el?.classList.remove("hidden");
+}
+
+function _renderTaleSections(taleId, myKey) {
+    const tale = _companyTales.find(t => t.id === taleId);
+    const secInTale = document.getElementById("companySectionInTale");
+    const secWorld = document.getElementById("companySectionWorld");
+    const inGrid = document.getElementById("companyInTaleGrid");
+    const wGrid = document.getElementById("companyWorldGrid");
+    const inCount = document.getElementById("companyInTaleCount");
+    const wCount = document.getElementById("companyWorldCount");
+    const wTitle = document.getElementById("companyWorldTitle");
+
+    secInTale?.classList.remove("hidden");
+    secWorld?.classList.remove("hidden");
+    if (wTitle) wTitle.textContent = "Also in the World";
+    if (inGrid) inGrid.innerHTML = "";
+    if (wGrid) wGrid.innerHTML = "";
+
+    const inTale = [], inWorld = [];
+    _companyAllChars.forEach(char => {
+        const key = `${char.ownerUid}__${char.id}`;
+        if (key === myKey) return; // skip own character
+        if (tale?.playerOverrides?.[key]?.excluded === true) {
+            inWorld.push(char);
+        } else {
+            inTale.push(char);
+        }
+    });
+
+    if (inCount) inCount.textContent = inTale.length;
+    if (wCount) wCount.textContent = inWorld.length;
+
+    if (inTale.length === 0) {
+        if (inGrid) inGrid.innerHTML = '<div class="company-grid-empty">No other characters are active in this tale.</div>';
+    } else {
+        inTale.forEach((c, i) => inGrid?.appendChild(
+            _buildCompanyCard(c, _companyAllPlayers[c.ownerUid]?.name || "Unknown", i)
+        ));
+    }
+
+    if (inWorld.length === 0) {
+        if (wGrid) wGrid.innerHTML = '<div class="company-grid-empty">No wanderers beyond the tale.</div>';
+    } else {
+        inWorld.forEach((c, i) => wGrid?.appendChild(
+            _buildCompanyCard(c, _companyAllPlayers[c.ownerUid]?.name || "Unknown", i)
+        ));
+    }
+}
+
+function _renderWorldOnly(myKey, sectionTitle) {
+    const secWorld = document.getElementById("companySectionWorld");
+    const wGrid = document.getElementById("companyWorldGrid");
+    const wCount = document.getElementById("companyWorldCount");
+    const wTitle = document.getElementById("companyWorldTitle");
+    const secInTale = document.getElementById("companySectionInTale");
+
+    secInTale?.classList.add("hidden");
+    secWorld?.classList.remove("hidden");
+    if (wTitle) wTitle.textContent = sectionTitle;
+    if (wGrid) wGrid.innerHTML = "";
+
+    const others = _companyAllChars.filter(c => `${c.ownerUid}__${c.id}` !== myKey);
+    if (wCount) wCount.textContent = others.length;
+
+    if (others.length === 0) {
+        if (wGrid) wGrid.innerHTML = '<div class="company-grid-empty">No other characters found.</div>';
+        return;
+    }
+    others.forEach((c, i) => wGrid?.appendChild(
+        _buildCompanyCard(c, _companyAllPlayers[c.ownerUid]?.name || "Unknown", i)
+    ));
+}
+
+function _buildCompanyCard(char, playerName, index) {
+    const card = document.createElement("div");
+    card.className = "company-card";
+    card.style.animationDelay = `${index * 30}ms`;
+
+    const _e = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const name = char.charName || "Unnamed Character";
+    const species = char.species || "";
+    const cls = char.classLevel || "";
+    const meta = [species, cls].filter(Boolean).join(" · ") || "No details yet";
+    const rot = char.rot_status || "on_path";
+    const pol = parseInt(char.polarity) || 0;
+
+    const pills = [
+        rot === "off_path" || rot === "penalty"
+            ? `<span class="cc-pill off-path">OFF PATH</span>`
+            : `<span class="cc-pill on-path">ON PATH</span>`,
+        pol > 0 ? `<span class="cc-pill polarity-pos">+${pol}</span>`
+            : pol < 0 ? `<span class="cc-pill polarity-neg">${pol}</span>`
+                : `<span class="cc-pill polarity-neu">POL 0</span>`,
+    ].join("");
+
+    card.innerHTML = `
+        <div class="company-card-name">${_e(name)}</div>
+        <div class="company-card-player">Played by ${_e(playerName)}</div>
+        <div class="company-card-meta">${_e(meta)}</div>
+        <div class="company-card-pills">${pills}</div>
+        <span class="company-card-arrow">→</span>
+    `;
+    card.addEventListener("click", () => _openCompanyDrawer(char, playerName));
+    return card;
+}
+
+// ── Company drawer ────────────────────────────────────────────
+function _openCompanyDrawer(char, playerName) {
+    const backdrop = document.getElementById("companyDrawerBackdrop");
+    const loading = document.getElementById("companyDrawerLoading");
+    const content = document.getElementById("companyDrawerContent");
+    if (!backdrop) return;
+
+    backdrop.classList.remove("hidden");
+    if (loading) loading.style.display = "flex";
+    content?.classList.add("hidden");
+
+    const _set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v); };
+    _set("cdrCharName", char.charName || "Unnamed");
+    _set("cdrPlayerName", `Played by ${playerName}`);
+
+    const openBtn = document.getElementById("cdrOpenBtn");
+    if (openBtn) openBtn.href = `character-sheet.html?uid=${char.ownerUid}&sheet=${char.id}`;
+
+    // Populate
+    if (loading) loading.style.display = "none";
+    content?.classList.remove("hidden");
+
+    const s = f => parseInt(char[`stat_${f}`]) || 0;
+    _set("cdrPronouns", char.pronouns || "—");
+    _set("cdrSpecies", char.species || "—");
+    _set("cdrClassLevel", char.classLevel || "—");
+    _set("cdrOrigin", char.origin || "—");
+    _set("cdrFortitude", s("fortitude"));
+    _set("cdrMuscle", s("muscle"));
+    _set("cdrSwiftness", s("swiftness"));
+    _set("cdrKeeness", s("keeness"));
+    _set("cdrWisdom", s("wisdom"));
+    _set("cdrCharm", s("charm"));
+    _set("cdrFaith", s("faith"));
+    _set("cdrSelf", s("self"));
+    _set("cdrLore", s("lore"));
+    _set("cdrVitality", s("fortitude") + s("muscle"));
+    _set("cdrTenacity", s("self") + s("charm"));
+    _set("cdrSoul", s("faith") + s("wisdom"));
+    _set("cdrHealth", `${parseInt(char.current_health) || 0} / ${1 + Math.floor((s("fortitude") + s("muscle")) / 2)}`);
+    _set("cdrMorale", `${parseInt(char.current_morale) || 0} / ${1 + Math.floor((s("self") + s("charm")) / 2)}`);
+    _set("cdrSanity", `${parseInt(char.current_sanity) || 0} / ${1 + Math.floor((s("faith") + s("wisdom")) / 2)}`);
+
+    const rotLabel = { on_path: "On Path", off_path: "Off Path", aligned: "Aligned", penalty: "PENALTY" };
+    _set("cdrRotStatus", rotLabel[char.rot_status] || "On Path");
+    _set("cdrFatePoints", char.fate_points || 0);
+    const pol = parseInt(char.polarity) || 0;
+    _set("cdrPolarity", pol > 0 ? `+${pol}` : `${pol}`);
+    _set("cdrPolarityBand", _cdrPolarityBand(pol));
+
+    const div = document.createElement("div");
+    div.innerHTML = char.backstory || "";
+    _set("cdrBackstory", div.textContent || div.innerText || "Not recorded yet.");
+}
+
+function _closeCompanyDrawer() {
+    document.getElementById("companyDrawerBackdrop")?.classList.add("hidden");
+}
+
+function _cdrPolarityBand(v) {
+    if (v <= -20) return "Xenderon Threshold";
+    if (v <= -13) return "Abyss";
+    if (v <= -7) return "Deep Negative";
+    if (v <= -1) return "Negative";
+    if (v === 0) return "Neutral";
+    if (v <= 6) return "Positive";
+    if (v <= 12) return "Deep Positive";
+    if (v <= 19) return "Grace";
+    return "Vyomi Threshold";
+}
+
+document.getElementById("companyDrawerClose")?.addEventListener("click", _closeCompanyDrawer);
+document.getElementById("companyDrawerBackdrop")?.addEventListener("click", e => {
+    if (e.target.id === "companyDrawerBackdrop") _closeCompanyDrawer();
+});
+// Hook escape key into existing keydown listener
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") _closeCompanyDrawer();
 });
