@@ -444,7 +444,7 @@ function buildFateRow(points, thread) {
 
 function buildTallyGrid(override) {
     const crossed = override.stRollTally || [];
-    const cells = Array.from({ length: 20 }, (_, i) => {
+    const cells = Array.from({ length: 10 }, (_, i) => {
         const n = i + 1;
         const isCrossed = crossed.includes(n);
         return `<button class="tally-cell${isCrossed ? " crossed" : ""}" data-num="${n}">${n}</button>`;
@@ -453,7 +453,7 @@ function buildTallyGrid(override) {
     return `
         <div class="ptc-tally-section">
             <div class="ptc-tally-header">
-                <span class="ptc-field-label">Roll Tally (1–20)</span>
+                <span class="ptc-field-label">Roll Tally (1–10)</span>
                 <button class="ptc-tally-clear-btn">Clear All</button>
             </div>
             <div class="ptc-tally-grid">${cells}</div>
