@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playtest Grounds — Alithia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/navigation.css" />
+    <link rel="stylesheet" href="../css/playtest-pool.css" />
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <div class="hamburger-menu" id="hamburger"><span></span><span></span><span></span></div>
+    <div class="nav-overlay" id="navOverlay">
+        <ul class="nav-menu">
+            <li><a href="worldmap.html">WORLD MAP</a></li>
+            <li><a href="locations.html">LOCATIONS</a></li>
+            <li><a href="lore-codex.html">LORE CODEX</a></li>
+            <li><a href="factions.html">FACTIONS</a></li>
+            <li><a href="characters.html">CHARACTERS</a></li>
+            <li><a href="character-sheet.html">CHARACTER SHEET</a></li>
+            <li><a href="playtest-pool.html">PLAYTEST POOL</a></li>
+            <li><a href="changelog.html">CHANGELOG</a></li>
+            <li><a href="dashboard.html">DASHBOARD</a></li>
+            <li><a href="storyteller-pool.html">STORYTELLER PORTAL</a></li>
+            <li><a href="playtest-pool.html" class="active">PLAYTEST GROUNDS</a></li>
+        </ul>
+    </div>
+    <div class="page-transition"></div>
+
+    <!-- Auth guard -->
+    <div class="auth-guard" id="authGuard">
+        <div class="auth-guard-inner">
+            <div class="guard-rune">ᚱ</div>
+            <p>Verifying your passage…</p>
+        </div>
+    </div>
+
+    <!-- Main wrap -->
+    <div class="pt-wrap hidden" id="ptWrap">
+
+        <header class="pt-topbar">
+            <div class="pt-topbar-left">
+                <a href="worldmap.html" class="topbar-home"><span class="topbar-glyph">✦</span> Alithia</a>
+                <span class="topbar-divider">|</span>
+                <span class="topbar-label">Playtest Grounds</span>
+            </div>
+            <div class="pt-topbar-right">
+                <span class="topbar-username" id="topbarUsername">—</span>
+                <button class="signout-btn" id="signOutBtn">Sign Out</button>
+            </div>
+        </header>
+
+        <div class="pt-body">
+
+            <!-- Hero -->
+            <div class="pt-hero">
+                <div class="pt-hero-eyebrow">
+                    <span class="eyebrow-line"></span>
+                    <span class="eyebrow-text">PLAYTEST GROUNDS</span>
+                    <span class="eyebrow-line"></span>
+                </div>
+                <h1 class="pt-hero-title">Pregen Characters</h1>
+                <p class="pt-hero-sub">Pre-built adventurers ready to adopt — jump straight into the mechanics</p>
+            </div>
+
+            <!-- Stats bar -->
+            <div class="pt-stats-bar">
+                <div class="pt-stat">
+                    <span class="ptstat-val" id="statPregens">—</span>
+                    <span class="ptstat-label">Pregens Available</span>
+                </div>
+                <div class="ptstat-sep"></div>
+                <div class="pt-stat">
+                    <span class="ptstat-val" id="statAdoptions">—</span>
+                    <span class="ptstat-label">Total Adoptions</span>
+                </div>
+                <div class="ptstat-sep"></div>
+                <div class="pt-stat">
+                    <span class="ptstat-val" id="statMyAdoptions">—</span>
+                    <span class="ptstat-label">Your Adoptions</span>
+                </div>
+            </div>
+
+            <!-- Manager toolbar — Keeper / Storyteller only -->
+            <div class="pt-manager-bar hidden" id="ptManagerBar">
+                <div class="pt-manager-left">
+                    <span class="pt-manager-rune">✦</span>
+                    <span class="pt-manager-label">Manager View</span>
+                </div>
+                <button class="pt-add-btn" id="ptAddBtn">＋ New Pregen</button>
+            </div>
+
+            <!-- Your adoptions section -->
+            <div class="pt-your-section hidden" id="ptYourSection">
+                <div class="pt-your-header">
+                    <span class="pt-your-rune">ᚢ</span>
+                    <span class="pt-your-title">Your Adopted Pregens</span>
+                </div>
+                <div class="pt-your-list" id="ptYourList"></div>
+            </div>
+
+            <!-- Search -->
+            <div class="pt-toolbar">
+                <div class="pt-search-wrap">
+                    <span class="pt-search-icon">⌕</span>
+                    <input type="text" class="pt-search" id="ptSearch"
+                           placeholder="Search pregens by name, concept, species…" autocomplete="off" />
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="pt-loading" id="ptLoading">
+                <span class="loading-rune">ᚠ</span>
+                <span>Summoning the pregens…</span>
+            </div>
+
+            <!-- Empty -->
+            <div class="pt-empty hidden" id="ptEmpty">
+                <span class="empty-rune">ᚷ</span>
+                <p>No pregens have been forged yet.</p>
+            </div>
+
+            <!-- Pregen grid -->
+            <div class="pt-grid" id="ptGrid"></div>
+
+        </div>
+    </div>
+
+    <!-- ── Detail / Adopt Drawer ──────────────────────────────── -->
+    <div class="pt-drawer-backdrop hidden" id="ptDrawerBackdrop">
+        <div class="pt-drawer" id="ptDrawer">
+
+            <div class="pt-drawer-topbar">
+                <div class="pt-drawer-title-group">
+                    <span class="pt-drawer-name" id="ptDrawerName">—</span>
+                    <span class="pt-drawer-concept" id="ptDrawerConcept">—</span>
+                </div>
+                <div class="pt-drawer-actions">
+                    <button class="pt-drawer-edit-info-btn hidden" id="ptDrawerEditInfoBtn">✎ Edit Info</button>
+                    <a class="pt-drawer-editor-link hidden" id="ptDrawerEditorLink" href="#">⚙ Sheet Editor ↗</a>
+                    <button class="pt-adopt-btn" id="ptDrawerAdoptBtn">Adopt this Pregen</button>
+                    <button class="pt-drawer-close" id="ptDrawerClose">✕</button>
+                </div>
+            </div>
+
+            <div class="pt-drawer-body">
+                <div class="pt-drawer-content" id="ptDrawerContent">
+
+                    <!-- Identity -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Identity</div>
+                        <div class="dr-fields-row">
+                            <div class="dr-field"><span class="dr-label">Character Name</span><span class="dr-val" id="ptDrCharName">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Pronouns</span><span class="dr-val" id="ptDrPronouns">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Species</span><span class="dr-val" id="ptDrSpecies">—</span></div>
+                            <div class="dr-field"><span class="dr-label">Class / Level</span><span class="dr-val" id="ptDrClassLevel">—</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Stats</div>
+                        <div class="dr-stats-grid">
+                            <div class="dr-stat-group martial">
+                                <div class="dr-stat-header">Martial</div>
+                                <div class="dr-stat-row"><span>Fortitude</span><span class="dr-stat-val" id="ptDrFortitude">0</span></div>
+                                <div class="dr-stat-row"><span>Muscle</span><span class="dr-stat-val" id="ptDrMuscle">0</span></div>
+                                <div class="dr-stat-row"><span>Swiftness</span><span class="dr-stat-val" id="ptDrSwiftness">0</span></div>
+                            </div>
+                            <div class="dr-stat-group mind">
+                                <div class="dr-stat-header">Mind</div>
+                                <div class="dr-stat-row"><span>Keeness</span><span class="dr-stat-val" id="ptDrKeeness">0</span></div>
+                                <div class="dr-stat-row"><span>Wisdom</span><span class="dr-stat-val" id="ptDrWisdom">0</span></div>
+                                <div class="dr-stat-row"><span>Charm</span><span class="dr-stat-val" id="ptDrCharm">0</span></div>
+                            </div>
+                            <div class="dr-stat-group magic">
+                                <div class="dr-stat-header">Magic</div>
+                                <div class="dr-stat-row"><span>Faith</span><span class="dr-stat-val" id="ptDrFaith">0</span></div>
+                                <div class="dr-stat-row"><span>Self</span><span class="dr-stat-val" id="ptDrSelf">0</span></div>
+                                <div class="dr-stat-row"><span>Lore</span><span class="dr-stat-val" id="ptDrLore">0</span></div>
+                            </div>
+                            <div class="dr-stat-group derived">
+                                <div class="dr-stat-header">Derived</div>
+                                <div class="dr-stat-row"><span>Vitality</span><span class="dr-stat-val" id="ptDrVitality">—</span></div>
+                                <div class="dr-stat-row"><span>Tenacity</span><span class="dr-stat-val" id="ptDrTenacity">—</span></div>
+                                <div class="dr-stat-row"><span>Soul</span><span class="dr-stat-val" id="ptDrSoul">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Systems -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Systems</div>
+                        <div class="dr-systems-row">
+                            <div class="dr-sys-block rot">
+                                <span class="dr-sys-label">Rot</span>
+                                <span class="dr-sys-val" id="ptDrRotStatus">—</span>
+                            </div>
+                            <div class="dr-sys-block fate">
+                                <span class="dr-sys-label">Fate Points</span>
+                                <span class="dr-sys-val" id="ptDrFatePoints">—</span>
+                            </div>
+                            <div class="dr-sys-block polarity">
+                                <span class="dr-sys-label">Polarity</span>
+                                <span class="dr-sys-val" id="ptDrPolarity">—</span>
+                                <span class="dr-sys-sub" id="ptDrPolarityBand">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backstory -->
+                    <div class="dr-section">
+                        <div class="dr-section-header">Backstory</div>
+                        <div class="dr-backstory" id="ptDrBackstory">Not recorded yet.</div>
+                    </div>
+
+                    <!-- Adoptions panel — Manager only -->
+                    <div class="pt-adoptions-panel hidden" id="ptAdoptionsPanel">
+                        <div class="pt-adoptions-header">
+                            <span class="dr-section-header" style="margin:0">Adoptions</span>
+                            <span class="pt-adoptions-count" id="ptAdoptionsCount">0</span>
+                        </div>
+                        <div class="pt-adoptions-list" id="ptAdoptionsList">
+                            <div class="pt-adoptions-empty">Loading…</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Create / Edit Pregen Modal ────────────────────────── -->
+    <div class="pt-modal-backdrop hidden" id="ptCreateModalBackdrop">
+        <div class="pt-modal-box">
+            <button class="pt-modal-close" id="ptCreateModalClose">✕</button>
+            <div class="pt-modal-title" id="ptCreateModalTitle">New Pregen</div>
+            <p class="pt-modal-hint" id="ptCreateModalHint">Fill in the template details. You'll be taken to the full sheet editor to build out stats.</p>
+            <div class="pt-modal-form">
+                <label class="pt-modal-label">Template Name <span class="pt-modal-req">*</span></label>
+                <input type="text" class="pt-modal-input" id="ptPregenNameInput"
+                       placeholder="e.g. The Iron Vanguard" maxlength="60" />
+                <label class="pt-modal-label">Character Name Suggestion</label>
+                <input type="text" class="pt-modal-input" id="ptCharNameInput"
+                       placeholder="e.g. Kael Dawnhammer" maxlength="60" />
+                <label class="pt-modal-label">Concept / Flavor Text</label>
+                <textarea class="pt-modal-textarea" id="ptConceptInput"
+                          placeholder="A brief description of this pregen's role or personality…"
+                          maxlength="280" rows="3"></textarea>
+                <div class="pt-form-message" id="ptCreateMsg"></div>
+                <button class="pt-modal-create-btn" id="ptCreateSaveBtn">Create &amp; Edit Sheet →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Adopt Modal ────────────────────────────────────────── -->
+    <div class="pt-modal-backdrop hidden" id="ptAdoptModalBackdrop">
+        <div class="pt-modal-box">
+            <button class="pt-modal-close" id="ptAdoptModalClose">✕</button>
+            <div class="pt-modal-title">Adopt this Pregen</div>
+            <p class="pt-modal-hint" id="ptAdoptHint">A full editable copy will be added to your character sheet. Give your version a name to make it your own.</p>
+            <div class="pt-modal-form">
+                <label class="pt-modal-label">Your Character's Name <span class="pt-modal-req">*</span></label>
+                <input type="text" class="pt-modal-input" id="ptAdoptNameInput"
+                       placeholder="Enter a name…" maxlength="60" />
+                <div class="pt-form-message" id="ptAdoptMsg"></div>
+                <button class="pt-modal-create-btn" id="ptAdoptConfirmBtn">Adopt &amp; Open Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Delete Confirm Modal ───────────────────────────────── -->
+    <div class="pt-modal-backdrop hidden" id="ptDeleteModalBackdrop">
+        <div class="pt-modal-box pt-modal-box-danger">
+            <button class="pt-modal-close" id="ptDeleteModalClose">✕</button>
+            <div class="pt-modal-title pt-danger-title">Delete Pregen</div>
+            <p class="pt-modal-hint pt-danger-hint">
+                This removes the template permanently.
+                <strong id="ptDeleteNameDisplay">This pregen</strong>
+                will be gone. Existing adopted copies on player accounts are not affected.
+            </p>
+            <div class="pt-modal-form">
+                <p class="pt-modal-confirm-label">Type the template name to confirm:</p>
+                <input type="text" class="pt-modal-input" id="ptDeleteConfirmInput"
+                       placeholder="Template name…" maxlength="60" autocomplete="off" />
+                <div class="pt-form-message" id="ptDeleteMsg"></div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+                    <button class="pt-del-cancel-btn" id="ptDeleteCancelBtn">Cancel</button>
+                    <button class="pt-del-confirm-btn" id="ptDeleteConfirmBtn" disabled>Delete Forever</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/navigation.js"></script>
+    <script type="module" src="../js/playtest-pool.js"></script>
+</body>
+</html>

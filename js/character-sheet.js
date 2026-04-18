@@ -48,6 +48,8 @@ let saveTimeout = null;
 let isDirty = false;
 let isStoryteller = false;
 let viewingUid = null;
+let pregenMode = false;
+let currentPregenId = null;
 
 // ── DOM refs ─────────────────────────────────────────────────
 const authGuard = document.getElementById("authGuard");
@@ -81,14 +83,30 @@ onAuthStateChanged(auth, async (user) => {
     const paramSheet = params.get("sheet");
 
     let isStUser = false;
-
+    let isKeeperUser = false;
     try {
         const userSnap = await getDoc(doc(db, "users", user.uid));
         if (userSnap.exists()) {
             isStUser = userSnap.data().isStoryteller === true;
+            isKeeperUser = userSnap.data().role === "keeper";
         }
     } catch (err) {
         console.error("Role fetch failed:", err);
+    }
+
+    const paramPregen = params.get("pregen");
+    if (paramPregen) {
+        if (!isStUser && !isKeeperUser) {
+            // Non-managers cannot access the pregen editor
+            window.location.href = "playtest-pool.html";
+            return;
+        }
+        pregenMode = true;
+        currentPregenId = paramPregen;
+        showSheetUI();
+        try { await loadPregenEditorView(paramPregen); }
+        catch (err) { console.error("Pregen editor load failed:", err); }
+        return;
     }
 
     // 🔥 CRITICAL FIX: If params exist, DO NOT silently fallback
@@ -220,6 +238,71 @@ async function loadStorytellerView(ownerUid, sheetId) {
         lockAllFields();
     } catch (err) {
         console.error("Failed to load storyteller view:", err);
+    }
+}
+
+async function loadPregenEditorView(pregenId) {
+    try {
+        const topbarLabel = document.querySelector(".topbar-label");
+        if (topbarLabel) topbarLabel.textContent = "Pregen Editor";
+
+        // Gold banner at the top
+        const banner = document.createElement("div");
+        banner.style.cssText = `
+            position:fixed; top:calc(var(--topbar-h) + var(--tabnav-h));
+            left:0; right:0; z-index:77;
+            background:rgba(255,215,0,0.05);
+            border-bottom:1px solid rgba(255,215,0,0.18);
+            padding:0.4rem 1.25rem;
+            display:flex; align-items:center; gap:0.75rem;
+            font-family:var(--font-display); font-size:0.45rem;
+            letter-spacing:0.2em; color:rgba(255,215,0,0.6);
+        `;
+        banner.innerHTML = `
+            ✦ PREGEN EDITOR &nbsp;·&nbsp;
+            <a href="playtest-pool.html"
+               style="color:rgba(255,215,0,0.4); text-decoration:none;
+                      font-style:italic; font-family:var(--font-body);
+                      font-size:0.8rem; letter-spacing:0;">
+                ← Back to Playtest Grounds
+            </a>
+        `;
+        document.body.appendChild(banner);
+
+        // Push sheet content below the extra banner
+        const sheetWrapEl = document.getElementById("sheetWrap");
+        if (sheetWrapEl) sheetWrapEl.style.paddingTop = "calc(var(--topbar-h) + var(--tabnav-h) + 36px)";
+
+        // Load from playtest-sheets collection
+        const snap = await getDoc(doc(db, "playtest-sheets", pregenId));
+        if (!snap.exists()) {
+            console.error("Pregen not found:", pregenId);
+            return;
+        }
+
+        currentSheetId = pregenId;   // reuse for compatibility with populateSheet
+        sheetData = snap.data();
+
+        // Show pregen template name in the char switcher area
+        const pregenName = sheetData.pregenName || "Unnamed Pregen";
+        charSelect.innerHTML = `<option value="${pregenId}">${pregenName}</option>`;
+        charSelect.value = pregenId;
+
+        // Hide buttons that don't apply to pregen editing
+        ["charNewBtn", "charDelBtn"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+        });
+
+        // Hide The Company tab (doesn't apply to pregens)
+        const companyTab = document.querySelector('[data-tab="company"]');
+        if (companyTab) companyTab.style.display = "none";
+
+        populateSheet(sheetData);
+        isDirty = false;
+
+    } catch (err) {
+        console.error("Failed to load pregen editor:", err);
     }
 }
 
@@ -440,8 +523,33 @@ async function saveSheet() {
     if (!currentSheetId || !currentUser) return;
     const data = collectSheetData();
     data.updatedAt = serverTimestamp();
+
+    // ── Pregen editor mode ────────────────────────────────
+    if (pregenMode && currentPregenId) {
+        // Preserve template-only metadata from the last loaded sheetData
+        data.pregenName = sheetData.pregenName || "Unnamed Pregen";
+        data.concept = sheetData.concept || "";
+        data.isLocked = sheetData.isLocked || false;
+        data.adoptionCount = sheetData.adoptionCount || 0;
+        data.createdBy = sheetData.createdBy || currentUser.uid;
+        data.createdAt = sheetData.createdAt || serverTimestamp();
+        data.lastEditedBy = currentUser.uid;
+        delete data.uid;   // pregens are not user-owned documents
+
+        try {
+            await setDoc(doc(db, "playtest-sheets", currentPregenId), data, { merge: true });
+            sheetData = { ...sheetData, ...data };
+            isDirty = false;
+            showSaveStatus("✦ Pregen Saved", false);
+        } catch (err) {
+            console.error("Pregen save failed:", err);
+            showSaveStatus("Save failed — check connection", true);
+        }
+        return;
+    }
+
+    // ── Normal player save ────────────────────────────────
     data.uid = currentUser.uid;
-    // Sync charName to select option
     if (data.charName) {
         const opt = charSelect.querySelector(`option[value="${currentSheetId}"]`);
         if (opt) opt.textContent = data.charName || "Unnamed Character";
