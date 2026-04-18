@@ -68,6 +68,7 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    overflow-y: auto;
 }
 
     .nav-menu li a {
@@ -150,6 +151,7 @@
 
     .nav-menu {
         gap: 1.5rem;
+        overflow-y: auto;
     }
 
         .nav-menu li a {
